@@ -1,0 +1,24 @@
+[
+    {
+      "meal_id": "M001",
+      "meal_plan": "Breakfast",
+      "items": ["Omelette", "Bread", "Milk"],
+      "date": "2024-10-16",
+      "status": "Served"
+    },
+    {
+      "meal_id": "M002",
+      "meal_plan": "Lunch",
+      "items": ["Rice", "Dal", "Salad"],
+      "date": "2024-10-16",
+      "status": "Served"
+    },
+    {
+      "meal_id": "M003",
+      "meal_plan": "Dinner",
+      "items": ["Chapati", "Paneer", "Soup"],
+      "date": "2024-10-16",
+      "status": "Pending"
+    }
+  ]
+  

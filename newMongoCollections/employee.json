@@ -1,0 +1,27 @@
+[
+    {
+      "employee_id": "E001",
+      "name": "Raj Kumar",
+      "position": "Warden",
+      "contact": "+1111222333",
+      "email": "raj.kumar@hostel.com",
+      "shift": "Morning"
+    },
+    {
+      "employee_id": "E002",
+      "name": "Anita Sharma",
+      "position": "Cook",
+      "contact": "+4444555666",
+      "email": "anita.sharma@hostel.com",
+      "shift": "Evening"
+    },
+    {
+      "employee_id": "E003",
+      "name": "Suresh Gupta",
+      "position": "Cleaner",
+      "contact": "+7777888999",
+      "email": "suresh.gupta@hostel.com",
+      "shift": "Night"
+    }
+  ]
+  

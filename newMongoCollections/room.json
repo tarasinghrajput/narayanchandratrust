@@ -1,0 +1,24 @@
+[
+    {
+      "room_id": "R001",
+      "room_no": "101",
+      "capacity": 3,
+      "type": "Single",
+      "isAvailable": true
+    },
+    {
+      "room_id": "R002",
+      "room_no": "102",
+      "capacity": 2,
+      "type": "Double",
+      "isAvailable": false
+    },
+    {
+      "room_id": "R003",
+      "room_no": "103",
+      "capacity": 4,
+      "type": "Dormitory",
+      "isAvailable": true
+    }
+  ]
+  

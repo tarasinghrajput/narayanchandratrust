@@ -1,0 +1,24 @@
+[
+    {
+      "fee_id": "F001",
+      "student_id": "S001",
+      "amount": 10000,
+      "due_date": "2024-11-01",
+      "status": "Paid"
+    },
+    {
+      "fee_id": "F002",
+      "student_id": "S002",
+      "amount": 12000,
+      "due_date": "2024-12-01",
+      "status": "Pending"
+    },
+    {
+      "fee_id": "F003",
+      "student_id": "S003",
+      "amount": 15000,
+      "due_date": "2024-12-15",
+      "status": "Paid"
+    }
+  ]
+  

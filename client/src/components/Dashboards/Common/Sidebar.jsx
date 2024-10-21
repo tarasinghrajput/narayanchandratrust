@@ -75,7 +75,7 @@ function Sidebar({ links }) {
         }`}
       >
         <Link
-          to={`/${links[0].for}-dashboard`}
+          
           className="py-4 px-4 md:py-5 lg:py-4 gap-2 bg-blue-700 flex items-center text-2xl"
         >
           <svg

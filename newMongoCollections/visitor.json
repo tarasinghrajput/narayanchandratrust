@@ -1,0 +1,27 @@
+[
+    {
+      "visitor_id": "V001",
+      "student_id": "S001",
+      "name": "John Doe",
+      "relationship": "Father",
+      "visit_date": "2024-10-20",
+      "contact": "+1234567890"
+    },
+    {
+      "visitor_id": "V002",
+      "student_id": "S002",
+      "name": "Jane Smith",
+      "relationship": "Mother",
+      "visit_date": "2024-10-25",
+      "contact": "+9876543210"
+    },
+    {
+      "visitor_id": "V003",
+      "student_id": "S003",
+      "name": "Robert Brown",
+      "relationship": "Brother",
+      "visit_date": "2024-11-01",
+      "contact": "+1122334455"
+    }
+  ]
+  
