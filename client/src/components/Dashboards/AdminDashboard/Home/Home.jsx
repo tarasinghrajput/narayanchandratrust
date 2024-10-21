@@ -29,7 +29,7 @@ function Home() {
 
   const getComplaints = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
-    const response = await fetch(`http://localhost:3000/api/complaint/hostel`, {
+    const response = await fetch(`https://narayanchandratrust.onrender.com/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -53,7 +53,7 @@ function Home() {
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
     const response = await fetch(
-      "http://localhost:3000/api/suggestion/hostel",
+      "https://narayanchandratrust.onrender.com/api/suggestion/hostel",
       {
         method: "POST",
         headers: {
@@ -81,7 +81,7 @@ function Home() {
 
   const getRequests = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
-    const res = await fetch("http://localhost:3000/api/messoff/list", {
+    const res = await fetch("https://narayanchandratrust.onrender.com/api/messoff/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

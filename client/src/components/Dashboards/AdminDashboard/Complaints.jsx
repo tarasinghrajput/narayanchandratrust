@@ -7,7 +7,7 @@ function Complaints() {
   const getComplaints = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
     const response = await fetch(
-      `http://localhost:3000/api/complaint/hostel`,
+      `https://narayanchandratrust.onrender.com/api/complaint/hostel`,
       {
         method: "POST",
         headers: {
@@ -57,7 +57,7 @@ function Complaints() {
 
   const dismissComplaint = async (id) => {
     const response = await fetch(
-      "http://localhost:3000/api/complaint/resolve/",
+      "https://narayanchandratrust.onrender.com/api/complaint/resolve/",
       {
         method: "POST",
         headers: {
