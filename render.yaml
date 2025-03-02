@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hostel-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: MONGODB_URI
+        value: your_mongodb_connection_string
+      - key: NODE_ENV
+        value: production

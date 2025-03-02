@@ -1,11 +1,11 @@
 const { validationResult } = require('express-validator');
-const { MessOff, Student } = require('../models/');
+const { Maintenance, Student } = require('../models');
 const { verifyToken } = require('../utils/auth');
 
-// @route   request api/messoff/request
+// @route   request api/maintenance/request
 // @desc    Request for mess off
 // @access  Public
-exports.requestMessOff = async (req, res) => {
+exports.requestMaintenance = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -20,24 +20,24 @@ exports.requestMessOff = async (req, res) => {
         return res.status(400).json({success, "message": "Request cannot be made for past Mess off"});
     }
     try {
-        const messOff = new MessOff({
+        const maintenance = new Maintenance({
             student,
             leaving_date,
             return_date
         });
-        await messOff.save();
+        await maintenance.save();
         success = true;
-        return res.status(200).json({success, "message": "Mess off request sent successfully"});
+        return res.status(200).json({success, "message": "Maintenance request sent successfully"});
     } catch (err) {
         console.error(err.message);
         return res.status(500).json({success, "message": "Server Error"});
     }
 }
 
-// @route   GET count of request api/messoff/count
+// @route   GET count of request api/maintenance/count
 // @desc    Get all mess off requests
 // @access  Private
-exports.countMessOff = async (req, res) => {
+exports.countMaintenance = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -46,8 +46,8 @@ exports.countMessOff = async (req, res) => {
     const { student } = req.body;
     try {
         let date = new Date();
-        const list = await MessOff.find({ student, leaving_date: { $gte: new Date(date.getFullYear(), date.getMonth(), 1), $lte: new Date(date.getFullYear(), date.getMonth() + 1, 0) } });
-        let approved = await MessOff.find({student, status: "Approved", leaving_date: {$gte: new Date(date.getFullYear(), date.getMonth(), 1), $lte: new Date(date.getFullYear(), date.getMonth()+1, 0)}});
+        const list = await Maintenance.find({ student, leaving_date: { $gte: new Date(date.getFullYear(), date.getMonth(), 1), $lte: new Date(date.getFullYear(), date.getMonth() + 1, 0) } });
+        let approved = await Maintenance.find({student, status: "Approved", leaving_date: {$gte: new Date(date.getFullYear(), date.getMonth(), 1), $lte: new Date(date.getFullYear(), date.getMonth()+1, 0)}});
         
         let days = 0;
         for (let i = 0; i < approved.length; i++) {
@@ -65,10 +65,10 @@ exports.countMessOff = async (req, res) => {
     }
 }
 
-// @route   GET api/messoff/list
+// @route   GET api/maintenance/list
 // @desc    Get all mess off requests
 // @access  Public
-exports.listMessOff = async (req, res) => {
+exports.listMaintenance = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -77,9 +77,9 @@ exports.listMessOff = async (req, res) => {
     const { hostel } = req.body;
     try {
         const students = await Student.find({ hostel }).select('_id');
-        const list = await MessOff.find({ student: { $in: students } , status: "pending" }).populate('student', ['name', 'room_no']);
-        const approved = await MessOff.countDocuments({ student: { $in: students }, status: "approved", leaving_date: {$gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), $lte: new Date(new Date().getFullYear(), new Date().getMonth()+1, 0)}});
-        const rejected = await MessOff.countDocuments({ student: { $in: students }, status: "rejected", leaving_date: {$gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), $lte: new Date(new Date().getFullYear(), new Date().getMonth()+1, 0)}});
+        const list = await Maintenance.find({ student: { $in: students } , status: "pending" }).populate('student', ['name', 'room_no']);
+        const approved = await Maintenance.countDocuments({ student: { $in: students }, status: "approved", leaving_date: {$gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), $lte: new Date(new Date().getFullYear(), new Date().getMonth()+1, 0)}});
+        const rejected = await Maintenance.countDocuments({ student: { $in: students }, status: "rejected", leaving_date: {$gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), $lte: new Date(new Date().getFullYear(), new Date().getMonth()+1, 0)}});
         success = true;
         return res.status(200).json({success, list, approved, rejected});
     }
@@ -89,10 +89,10 @@ exports.listMessOff = async (req, res) => {
     }
 }
 
-// @route   GET api/messoff/update
+// @route   GET api/maintenance/update
 // @desc    Update mess off request
 // @access  Public
-exports.updateMessOff = async (req, res) => {
+exports.updateMaintenance = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -100,9 +100,9 @@ exports.updateMessOff = async (req, res) => {
     }
     const { id, status } = req.body;
     try {
-        const messOff = await MessOff.findByIdAndUpdate(id, { status });
+        const maintenance = await Maintenance.findByIdAndUpdate(id, { status });
         success = true;
-        return res.status(200).json({success, messOff});
+        return res.status(200).json({success, maintenance});
     }
     catch (err) {
         console.error(err.message);

@@ -81,7 +81,7 @@ function Home() {
 
   const getRequests = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
-    const res = await fetch("https://narayanchandratrust.onrender.com/api/messoff/list", {
+    const res = await fetch("https://narayanchandratrust.onrender.com/api/maintenance/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

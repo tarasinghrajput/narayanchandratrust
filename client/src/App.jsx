@@ -25,7 +25,7 @@ import AdminInvoices from './components/Dashboards/AdminDashboard/Invoices'
 import AdminSuggestions from './components/Dashboards/AdminDashboard/Suggestions'
 import AdminSettings from './components/Dashboards/AdminDashboard/Settings'
 import AllStudents from "./components/Dashboards/AdminDashboard/AllStudents";
-import AdminMess from "./components/Dashboards/AdminDashboard/MessOff";
+import AdminMess from "./components/Dashboards/AdminDashboard/Maintenance";
 
 function App() {
   return (
