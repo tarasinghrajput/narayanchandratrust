@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const { Maintenance, Student } = require('../models');
 const { verifyToken } = require('../utils/auth');
+const Notification = require("../models/Notification");
 
 // @route   request api/maintenance/request
 // @desc    Request for mess off
@@ -9,30 +10,42 @@ exports.requestMaintenance = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({"message": errors.array(), success});
+        return res.status(400).json({ "message": errors.array(), success });
     }
+
     const { student, leaving_date, return_date } = req.body;
     const today = new Date();
+
+    // ✅ Validate Dates
     if (new Date(leaving_date) > new Date(return_date)) {
-        return res.status(400).json({success, "message": "Leaving date cannot be greater than return date"});
+        return res.status(400).json({ success, "message": "Leaving date cannot be greater than return date" });
+    } else if (new Date(leaving_date) < today) {
+        return res.status(400).json({ success, "message": "Request cannot be made for past Mess off" });
     }
-    else if (new Date(leaving_date) < today) {
-        return res.status(400).json({success, "message": "Request cannot be made for past Mess off"});
-    }
+
     try {
-        const maintenance = new Maintenance({
-            student,
-            leaving_date,
-            return_date
-        });
+        // ✅ Save mess off request in database
+        const maintenance = new Maintenance({ student, leaving_date, return_date });
         await maintenance.save();
+
+        // ✅ Notify Admin
+        const admin = await Admin.findOne(); // Assuming there is one admin
+        if (admin) {
+            await Notification.create({
+                recipient: admin._id,
+                role: "Admin",
+                message: "A student has requested a mess off.",
+            });
+        }
+
         success = true;
-        return res.status(200).json({success, "message": "Maintenance request sent successfully"});
+        return res.status(200).json({ success, "message": "Maintenance request sent successfully" });
     } catch (err) {
         console.error(err.message);
-        return res.status(500).json({success, "message": "Server Error"});
+        return res.status(500).json({ success, "message": "Server Error" });
     }
-}
+};
+
 
 // @route   GET count of request api/maintenance/count
 // @desc    Get all mess off requests

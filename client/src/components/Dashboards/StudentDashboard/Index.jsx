@@ -130,11 +130,29 @@ export default function Index() {
   ];
 
   const student = JSON.parse(localStorage.getItem("student"));
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:3000/api/notifications/Student/${student._id}`);
+        const data = await res.json();
+  
+        if (data.success) {
+          setNotifications(data.notifications.map((notif) => notif.message));
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+  
+    fetchNotifications();
+  }, []);
 
   return (
     <div className="flex">
       <Sidebar links={links} />
-      <Topbar name={student.name} notifications={[]} />
+      <Topbar name={student.name} notifications={notifications} />
       <div className="w-full bg-stone-900 h-screen">
         <Outlet />
       </div>

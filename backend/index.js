@@ -13,6 +13,7 @@ app.use(express.json({ extended: false }));
 
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/hostel', require('./routes/hostelRoutes'));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/complaint', require('./routes/complaintRoutes'));

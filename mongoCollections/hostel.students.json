@@ -1,57 +1,57 @@
 [
-{
-  "_id": {
-    "$oid": "6467df72c2b3142559d29326"
+  {
+    "_id": {
+      "$oid": "6467df72c2b3142559d29326"
+    },
+    "name": "Saurav Singh",
+    "cms_id": 368115,
+    "room_no": 212,
+    "batch": 2024,
+    "dept": "seecs",
+    "course": "cs",
+    "email": "saurav@gmail.com",
+    "father_name": "dad",
+    "contact": "1234567890",
+    "address": "Virar",
+    "dob": {
+      "$date": "2023-05-09T00:00:00.000Z"
+    },
+    "cnic": "6110197584215",
+    "user": {
+      "$oid": "6467df72c2b3142559d29324"
+    },
+    "hostel": {
+      "$oid": "645aae56db7005c0dc64fd92"
+    },
+    "date": {
+      "$date": "2023-05-19T20:43:30.844Z"
+    },
+    "__v": 0
   },
-  "name": "Saurav Singh",
-  "cms_id": 368115,
-  "room_no": 212,
-  "batch": 2024,
-  "dept": "seecs",
-  "course": "cs",
-  "email": "saurav@gmail.com",
-  "father_name": "dad",
-  "contact": "1234567890",
-  "address": "Virar",
-  "dob": {
-    "$date": "2023-05-09T00:00:00.000Z"
-  },
-  "cnic": "6110197584215",
-  "user": {
-    "$oid": "6467df72c2b3142559d29324"
-  },
-  "hostel": {
-    "$oid": "645aae56db7005c0dc64fd92"
-  },
-  "date": {
-    "$date": "2023-05-19T20:43:30.844Z"
-  },
-  "__v": 0
-},
-{
-  "name": "Gaurav Sharma",
-  "cms_id": 368115,
-  "room_no": 212,
-  "batch": 2024,
-  "dept": "seecs",
-  "course": "cs",
-  "email": "gaurav@gmail.com",
-  "father_name": "dad",
-  "contact": "8626046234",
-  "address": "virar",
-  "dob": {
-    "$date": "2023-05-09T00:00:00.000Z"
-  },
-  "cnic": "6110197584215",
-  "user": {
-    "$oid": "6467df72c2b3142559d29324"
-  },
-  "hostel": {
-    "$oid": "645aae56db7005c0dc64fd92"
-  },
-  "date": {
-    "$date": "2023-05-19T20:43:30.844Z"
-  },
-  "__v": 0
-}
+  {
+    "name": "Gaurav Sharma",
+    "cms_id": 368116,
+    "room_no": 212,
+    "batch": 2024,
+    "dept": "seecs",
+    "course": "cs",
+    "email": "gaurav@gmail.com",
+    "father_name": "dad",
+    "contact": "8626046234",
+    "address": "virar",
+    "dob": {
+      "$date": "2023-05-09T00:00:00.000Z"
+    },
+    "cnic": "6110197584215",
+    "user": {
+      "$oid": "6467df72c2b3142559d29324"
+    },
+    "hostel": {
+      "$oid": "645aae56db7005c0dc64fd92"
+    },
+    "date": {
+      "$date": "2023-05-19T20:43:30.844Z"
+    },
+    "__v": 0
+  }
 ]
