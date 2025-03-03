@@ -15,10 +15,33 @@ import { toast } from "react-toastify";
 
 function Home() {
   const admin = JSON.parse(localStorage.getItem("admin"));
-  const hostel = JSON.parse(localStorage.getItem("hostel"));
+  // const hostel = JSON.parse(localStorage.getItem("hostel"));
+  const [hostel, setHostel] = useState(null);
   const [noOfStudents, setNoOfStudents] = useState(0);
   const [complaints, setComplaints] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    async function fetchHostel() {
+      try {
+        const response = await fetch("http://localhost:3000/api/hostel");
+        const data = await response.json();
+        
+        if (data.success) {
+          setHostel(data.hostel);
+  
+          // Save to localStorage
+          localStorage.setItem("hostel", JSON.stringify(data.hostel));
+        } else {
+          console.error("Hostel data not found");
+        }
+      } catch (error) {
+        console.error("Error fetching hostel data:", error);
+      }
+    }
+    
+    fetchHostel();
+  }, []);
 
   const getStudentCount = async () => {
     const res = await getAllStudents();
@@ -29,7 +52,7 @@ function Home() {
 
   const getComplaints = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
-    const response = await fetch(`https://narayanchandratrust.onrender.com/api/complaint/hostel`, {
+    const response = await fetch(`http://localhost:3000/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -53,7 +76,7 @@ function Home() {
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
     const response = await fetch(
-      "https://narayanchandratrust.onrender.com/api/suggestion/hostel",
+      "http://localhost:3000/api/suggestion/hostel",
       {
         method: "POST",
         headers: {
@@ -81,7 +104,7 @@ function Home() {
 
   const getRequests = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
-    const res = await fetch("https://narayanchandratrust.onrender.com/api/maintenance/list", {
+    const res = await fetch("http://localhost:3000/api/maintenance/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -224,7 +247,7 @@ function Home() {
       <h1 className="text-white font-bold text-5xl text-center">
         Welcome <span className="text-blue-500">{admin.name || "admin"}!</span>
       </h1>
-      {/* <h1 className="text-white text-xl">Manager, {hostel.name || "hostel"}</h1> */}
+      <h1 className="text-white text-xl">Manager, {hostel?.name || "Hostel"}</h1>
       <div className="flex w-full gap-5 sm:px-20 pt-5 flex-wrap items-center justify-center">
         <ShortCard title="Total Students" number={noOfStudents} />
         <ShortCard title="Total Complaints" number={complaints.length} />

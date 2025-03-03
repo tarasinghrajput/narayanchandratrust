@@ -15,7 +15,7 @@ function Mess() {
       return_date: returnDate,
     };
 
-    let response = await fetch("https://narayanchandratrust.onrender.com/api/maintenance/request", {
+    let response = await fetch("http://localhost:3000/api/maintenance/request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,7 +93,7 @@ function Mess() {
     let student = JSON.parse(localStorage.getItem("student"));
     setLoading(true);
     if (student) {
-      fetch("https://narayanchandratrust.onrender.com/api/maintenance/count", {
+      fetch("http://localhost:3000/api/maintenance/count", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

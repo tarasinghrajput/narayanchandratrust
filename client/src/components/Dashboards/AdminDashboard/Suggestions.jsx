@@ -7,7 +7,7 @@ import { Loader } from "../../Dashboards/Common/Loader";
 function Suggestions() {
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
-    const response = await fetch("https://narayanchandratrust.onrender.com/api/suggestion/hostel", {
+    const response = await fetch("http://localhost:3000/api/suggestion/hostel", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -32,7 +32,7 @@ function Suggestions() {
 
   const updateSuggestion = async (id) => {
     setLoader(true);
-    const response = await fetch("https://narayanchandratrust.onrender.com/api/suggestion/update", {
+    const response = await fetch("http://localhost:3000/api/suggestion/update", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

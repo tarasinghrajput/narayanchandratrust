@@ -7,7 +7,7 @@ function Suggestions() {
   const registerSuggestions = async (e) => {
     e.preventDefault();
     const student = JSON.parse(localStorage.getItem("student"));
-    const response = await fetch("https://narayanchandratrust.onrender.com/api/suggestion/register", {
+    const response = await fetch("http://localhost:3000/api/suggestion/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
