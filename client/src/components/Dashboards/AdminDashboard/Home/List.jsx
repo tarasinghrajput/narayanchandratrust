@@ -19,19 +19,19 @@ function List({ list, title, icon, addClasses }) {
           {list.length === 0 ? (
             <li className="mt-2 pl-3 mb-5">No new {title}</li>
           ) : (
-            list.map((item) => (
+            list.map((item, index) => (
               <li
                 className="group py-3 pl-3 rounded sm:py-4 hover:bg-neutral-700 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
-                key={item.id}
+                key={item.id || `list-item-${index}`}
               >
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0 text-white">{icon}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate text-white">
-                      {item.title}
+                      {item.title || `Item ${index}`}
                     </p>
                     <p className="text-sm truncate text-gray-400">
-                      {item.desc}
+                      {item.desc || `Description ${index}`}
                     </p>
                   </div>
                 </div>
