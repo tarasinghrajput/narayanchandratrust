@@ -148,7 +148,7 @@ function RegisterStudent() {
             <Input
               field={{
                 name: "cnic",
-                placeholder: "Student CNIC",
+                placeholder: "Student Aadhar Card Number",
                 type: "text",
                 req: true,
                 value: cnic,

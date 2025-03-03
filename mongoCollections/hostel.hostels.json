@@ -2,9 +2,9 @@
   "_id": {
     "$oid": "645aae56db7005c0dc64fd92"
   },
-  "name": "Attar Hostel 1",
-  "location": "https://goo.gl/maps/Az89wA3NsPaXfMfP9",
-  "rooms": 350,
-  "capacity": 700,
-  "vacant": 350
+  "name": "Narayan Chandra Trust",
+  "location": "https://maps.app.goo.gl/X73ErYwyZvJHbhkd8",
+  "rooms": 35,
+  "capacity": 70,
+  "vacant": 48
 }]
