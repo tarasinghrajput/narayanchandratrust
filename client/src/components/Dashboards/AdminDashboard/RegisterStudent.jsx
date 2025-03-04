@@ -19,10 +19,10 @@ function RegisterStudent() {
         course: course,
         email: email,
         father_name: fatherName,
-        contact: contact,
+        contact: contact.trim(),
         address: address,
         dob: dob,
-        cnic: cnic,
+        cnic: cnic.trim(),
         hostel: hostel,
         password: password
       };
@@ -80,7 +80,7 @@ function RegisterStudent() {
         // console.log(cms);
         data.errors.forEach((err) => {
           toast.error(
-            err.msg, {
+            err.msg || "Unknown error occurred.", {
             position: "top-right",
             autoClose: 3000,
             hideProgressBar: false,
@@ -182,7 +182,7 @@ function RegisterStudent() {
   };
 
   const validateContact = (value) => {
-    if (!/^\d{10}$/.test(value)) {
+    if (!/^\d{10}$/.test(value)) { // ✅ This should allow only 10-digit numbers
       setErrors((prev) => ({ ...prev, contact: "Contact must be exactly 10 digits." }));
     } else {
       setErrors((prev) => ({ ...prev, contact: "" }));
@@ -209,7 +209,7 @@ function RegisterStudent() {
   };
 
   const validateCnic = (value) => {
-    if (!/^\d{12}$/.test(value)) {
+    if (!/^\d{12}$/.test(value)) { // ✅ This should allow only 12-digit numbers
       setErrors((prev) => ({ ...prev, cnic: "CNIC must be exactly 12 digits." }));
     } else {
       setErrors((prev) => ({ ...prev, cnic: "" }));
@@ -218,8 +218,8 @@ function RegisterStudent() {
   };
 
   const validatePassword = (value) => {
-    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(value)) {
-      setErrors((prev) => ({ ...prev, password: "Password must be at least 6 characters, with letters and numbers." }));
+    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(value)) {
+      setErrors((prev) => ({ ...prev, password: "Password must be at least 8 characters, with letters and numbers." }));
     } else {
       setErrors((prev) => ({ ...prev, password: "" }));
     }
