@@ -4,11 +4,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import  LoadingBar  from 'react-top-loading-bar'
 
-function MessOff() {
+function Maintenance() {
   const getRequests = async () => {
     setProgress(30);
     const hostel = JSON.parse(localStorage.getItem("hostel"));
-    const res = await fetch("https://narayanchandratrust.onrender.com/api/messoff/list", {
+    const res = await fetch("http://localhost:3000/api/maintenance/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +43,7 @@ function MessOff() {
   };
 
   const updateRequest = async (id, status) => {
-    const res = await fetch("https://narayanchandratrust.onrender.com/api/messoff/update", {
+    const res = await fetch("http://localhost:3000/api/maintenance/update", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -229,4 +229,4 @@ const reject = (id) => {
   );
 }
 
-export default MessOff;
+export default Maintenance;

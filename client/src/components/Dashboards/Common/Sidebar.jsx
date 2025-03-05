@@ -2,14 +2,25 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 
+// Sidebar.propTypes = {
+//   links: PropTypes.shape({
+//     text: PropTypes.string.isRequired,
+//     url: PropTypes.string.isRequired,
+//     for: PropTypes.string.isRequired,
+//     svg: PropTypes.element.isRequired,
+//   }).isRequired,
+// };
 Sidebar.propTypes = {
-  links: PropTypes.shape({
-    text: PropTypes.string.isRequired,
-    url: PropTypes.string.isRequired,
-    for: PropTypes.string.isRequired,
-    svg: PropTypes.element.isRequired,
-  }).isRequired,
+  links: PropTypes.arrayOf(
+    PropTypes.shape({
+      text: PropTypes.string.isRequired,
+      url: PropTypes.string.isRequired,
+      for: PropTypes.string,
+      svg: PropTypes.element.isRequired,
+    })
+  ).isRequired, // Changed from `shape` to `arrayOf(shape)`
 };
+
 
 function Sidebar({ links }) {
   const navigate = useNavigate();
@@ -96,7 +107,7 @@ function Sidebar({ links }) {
         </Link>
         <div className="flex flex-col space-y-1 text-2xl text-white">
           {/*eslint-disable-next-line react/prop-types*/}
-          {links.map((link) => (
+          {links.map((link, index) => (
             <Link
               to={link.url}
               key={link.text}
@@ -107,7 +118,7 @@ function Sidebar({ links }) {
               }`}
             >
               {link.svg}
-              {link.text}
+              {link.text} {/* Ensures `for` is never undefined */}
             </Link>
           ))}
         </div>

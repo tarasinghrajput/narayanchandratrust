@@ -1,5 +1,5 @@
 const { validationResult } = require('express-validator');
-const { Invoice, MessOff, Student } = require('../models');
+const { Invoice, Maintenance, Student } = require('../models');
 const { Mess_bill_per_day } = require('../constants/mess');
 
 // @route   Generate api/invoice/generate
@@ -24,12 +24,12 @@ exports.generateInvoices = async (req, res) => {
     let amount = Mess_bill_per_day * daysinlastmonth;
     count = 0;
     students.map(async (student) => {
-        let messoff = await MessOff.find({ student: student });
-        if (messoff) {
-            messoff.map((messoffone) => {
-                if (messoffone.status === 'approved' && messoffone.return_date.getMonth() + 1 === new Date().getMonth()) {
-                    let leaving_date = messoffone.leaving_date;
-                    let return_date = messoffone.return_date;
+        let maintenance = await Maintenance.find({ student: student });
+        if (maintenance) {
+            maintenance.map((maintenanceone) => {
+                if (maintenanceone.status === 'approved' && maintenanceone.return_date.getMonth() + 1 === new Date().getMonth()) {
+                    let leaving_date = maintenanceone.leaving_date;
+                    let return_date = maintenanceone.return_date;
                     let number_of_days = (return_date - leaving_date) / (1000 * 60 * 60 * 24);
                     amount -= Mess_bill_per_day * number_of_days;
                 }

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const MessOffSchema = new Schema({
+const MaintenanceSchema = new Schema({
     student:{
         type:Schema.Types.ObjectId,
         ref:'student'
@@ -24,4 +24,4 @@ const MessOffSchema = new Schema({
     }
 })
 
-module.exports = MessOff = mongoose.model('messoff',MessOffSchema);
+module.exports = Maintenance = mongoose.model('maintenance',MaintenanceSchema);

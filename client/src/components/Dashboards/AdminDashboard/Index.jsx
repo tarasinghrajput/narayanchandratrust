@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { Sidebar } from "../Common/Sidebar";
 import { Topbar } from "../Common/Topbar";
 import { useEffect, useState } from "react";
@@ -170,24 +170,42 @@ export default function Index() {
     },
   ];
 
-  const admin = JSON.parse(localStorage.getItem("admin"));
+  const admin = JSON.parse(localStorage.getItem("admin")) || {};
 
-  const [notifications, setNotifications] = useState([
-    368115, 347403, 377902, 369420,
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => {
-    //! FETCH FROM DATABASE DANISH
-    setNotifications([368115, 347403, 377902, 369420]);
-  }, []);
+  const navigate = useNavigate();
 
-  return (
-    <div className="flex">
-      <Sidebar links={links} />
-      <Topbar name={admin.name} notifications={notifications} />
-      <div className="w-full bg-stone-900 h-screen">
-        <Outlet />
-      </div>
+useEffect(() => {
+  if (!admin) {
+    navigate("/auth/login"); // Redirect to login if admin is null
+  }
+}, [admin, navigate]);
+
+useEffect(() => {
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/notifications/Admin/${admin._id}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setNotifications(data.notifications.map((notif) => notif.message));
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  fetchNotifications();
+}, []);
+
+return (
+  <div className="flex">
+    <Sidebar links={links} />
+    <Topbar name={admin.name || "Admin"} notifications={notifications} />
+    <div className="w-full bg-stone-900 h-screen">
+      <Outlet />
     </div>
-  );
+  </div>
+);
 }

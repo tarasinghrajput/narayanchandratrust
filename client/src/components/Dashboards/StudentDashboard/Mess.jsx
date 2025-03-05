@@ -6,7 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function Mess() {
-  let requestMessOff = async (event) => {
+  let requestMaintenance = async (event) => {
     event.preventDefault();
     setLoading(true);
     let data = {
@@ -15,7 +15,7 @@ function Mess() {
       return_date: returnDate,
     };
 
-    let response = await fetch("https://narayanchandratrust.onrender.com/api/Messoff/request", {
+    let response = await fetch("http://localhost:3000/api/maintenance/request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -59,7 +59,7 @@ function Mess() {
   const [leaveDate, setLeaveDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [requests, setRequests] = useState(0);
-  const [Messoff, setMessOff] = useState(0);
+  const [maintenance, setMaintenance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [requestsList, setRequestsList] = useState([]);
 
@@ -93,7 +93,7 @@ function Mess() {
     let student = JSON.parse(localStorage.getItem("student"));
     setLoading(true);
     if (student) {
-      fetch("https://narayanchandratrust.onrender.com/api/Messoff/count", {
+      fetch("http://localhost:3000/api/maintenance/count", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,7 +105,7 @@ function Mess() {
         .then((res) => res.json())
         .then((result) => {
           if (result.success) {
-            setMessOff(result.approved);
+            setMaintenance(result.approved);
             setRequests(result.list.length);
             setRequestsList(result.list);
           } else {
@@ -141,8 +141,8 @@ function Mess() {
     <div className="w-full h-screen gap-10 flex flex-col items-center justify-center max-h-screen overflow-y-auto pt-[500px] sm:pt-96 md:pt-96 lg:pt-40">
       <h1 className="text-white font-bold text-5xl">Mess Off</h1>
       <ul className="flex gap-5 text-white text-xl px-5 sm:p-0 text-center">
-        <li>Total Mess: {daysofmonthtilltoday - Messoff} </li>
-        <li>Mess Off: {loading ? loader : Messoff}</li>
+        <li>Total Mess: {daysofmonthtilltoday - maintenance} </li>
+        <li>Mess Off: {loading ? loader : maintenance}</li>
         <li>Requests Sent: {loading ? loader : requests}</li>
       </ul>
       <div className="w-full gap-10 flex items-center justify-center flex-wrap">
@@ -154,7 +154,7 @@ function Mess() {
               datasets: [
                 {
                   label: "Mess",
-                  data: [Messoff, requests, daysofmonthtilltoday-Messoff],
+                  data: [maintenance, requests, daysofmonthtilltoday-maintenance],
                   backgroundColor: ["#F26916", "#EAB308", "#1D4ED8"],
                   barThickness: 20,
                   borderRadius: 0,
@@ -222,7 +222,7 @@ function Mess() {
       </div>
       <form
         method="POST"
-        onSubmit={requestMessOff}
+        onSubmit={requestMaintenance}
         className="bg-neutral-950 py-5 px-10 rounded-lg shadow-xl w-full sm:w-auto"
       >
         <div className="flex gap-5">

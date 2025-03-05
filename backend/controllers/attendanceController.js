@@ -1,33 +1,46 @@
 const { validationResult } = require('express-validator');
 const { Student, Attendance } = require('../models');
+const Notification = require("../models/Notification");
 
 const markAttendance = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(422).json({success, errors: errors.array() });
+        return res.status(422).json({ success, errors: errors.array() });
     }
+
     const { student, status } = req.body;
     const date = new Date();
-    const alreadyattendance = await Attendance.findOne({ student, date: { $gte: date.setHours(0, 0, 0, 0), $lt: date.setHours(23, 59, 59, 999) } });
-    if (alreadyattendance) {
-        return res.status(409).json({ success, error: 'Attendance already marked' });
+    
+    // ✅ Check if attendance is already marked
+    const alreadyAttendance = await Attendance.findOne({ 
+        student, 
+        date: { $gte: date.setHours(0, 0, 0, 0), $lt: date.setHours(23, 59, 59, 999) } 
+    });
+
+    if (alreadyAttendance) {
+        return res.status(409).json({ success, error: "Attendance already marked" });
     }
     
     try {
-        const attendance = new Attendance(
-            {
-                student,
-                status
-            }
-        );
-        const result = await attendance.save();
+        // ✅ Save attendance in database
+        const attendance = new Attendance({ student, status });
+        await attendance.save();
+
+        // ✅ Send notification to student
+        await Notification.create({
+            recipient: student,
+            role: "Student",
+            message: "Your attendance has been marked successfully.",
+        });
+
         success = true;
-        res.status(201).json(success,result);
+        res.status(201).json({ success, message: "Attendance Marked!", attendance });
     } catch (err) {
         res.status(500).json({ success, error: err.message });
     }
-}
+};
+
 
 const getAttendance = async (req, res) => {
     let success = false;

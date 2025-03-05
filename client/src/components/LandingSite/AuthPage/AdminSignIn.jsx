@@ -11,7 +11,7 @@ export default function AdminSignIn() {
   const getHostel = async () => {
     let admin = JSON.parse(localStorage.getItem("admin"));
     try {
-      const res = await fetch("https://narayanchandratrust.onrender.com/api/admin/get-hostel", {
+      const res = await fetch("http://localhost:3000/api/admin/get-hostel", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -34,7 +34,7 @@ export default function AdminSignIn() {
       password: pass,
     };
 
-    let response = await fetch("https://narayanchandratrust.onrender.com/api/auth/login", {
+    let response = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,7 +47,7 @@ export default function AdminSignIn() {
 
     if (result.success) {
       localStorage.setItem("token", result.data.token);
-      let admin = await fetch("https://narayanchandratrust.onrender.com/api/admin/get-admin", {
+      let admin = await fetch("http://localhost:3000/api/admin/get-admin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

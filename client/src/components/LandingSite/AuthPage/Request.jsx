@@ -9,7 +9,7 @@ export default function RequestAcc() {
       cms_id: inputCms,
     };
 
-    fetch("https://narayanchandratrust.onrender.com/api/request/register", {
+    fetch("http://localhost:3000/api/request/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
