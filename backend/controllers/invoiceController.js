@@ -107,7 +107,11 @@ exports.updateInvoice = async (req, res) => {
     }
     const { student, status } = req.body;
     try {
-        let invoice = await Invoice.findOneAndUpdate({ student: student, date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }, { status: status });
+        let invoice = await Invoice.findOneAndUpdate(
+            { student: student, date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }, 
+            { status: status },
+            { new: true }  // ✅ Ensures updated invoice is returned
+        );
         success = true;
         res.status(200).json({ success, invoice });
     }

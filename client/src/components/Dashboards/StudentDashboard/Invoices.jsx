@@ -10,43 +10,41 @@ function Invoices() {
     let student = JSON.parse(localStorage.getItem("student"));
     fetch("http://localhost:3000/api/invoice/student", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        },
-        body: JSON.stringify({student: student._id}),
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student: student._id }),
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
           let invoices = data.invoices;
           let List = [];
-          let paidInvoices = 0;
-          let pendingInvoices = 0;
-    
+          let paidInvoicesCount = 0;
+          let pendingInvoicesCount = 0;
+  
           invoices.forEach((invoice) => {
-            if (invoice.status.toLowerCase === "paid") {
-              paidInvoices += 1;
+            if (invoice.status.toLowerCase() === "paid") {
+              paidInvoicesCount += 1;
             } else {
-              pendingInvoices += 1;
+              pendingInvoicesCount += 1;
             }
             let date = new Date(invoice.date);
-            invoice.date= date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-            List.push(
-              {
-                title: invoice.title,
-                amount: "Rs. "+invoice.amount,
-                status: invoice.status,
-                date: invoice.date,
-              }
-            );
+            invoice.date = date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+            List.push({
+              title: invoice.title,
+              amount: "Rs. " + invoice.amount,
+              status: invoice.status,
+              date: invoice.date,
+            });
           });
+  
           setInvoiceList(List);
           setTotalInvoices(invoices.length);
-          setPaidInvoices(paidInvoices);
-          setPendingInvoices(pendingInvoices);
+          setPaidInvoices(paidInvoicesCount);
+          setPendingInvoices(pendingInvoicesCount);
         }
       });
-  }, [invoiceList.length, totalInvoices, pendingInvoices, paidInvoices]);
+  }, []);  // ✅ Removed dependencies to prevent unnecessary re-renders
+  
 
   return (
     <div className="w-full h-screen flex flex-col gap-5 items-center justify-center max-h-screen overflow-y-auto">
@@ -81,8 +79,8 @@ function Invoices() {
         </div>
         <div className="flow-root">
           <ul role="list" className="divide-y divide-gray-700">
-            {invoiceList.map((invoice) => (
-              <li className="py-3 sm:py-4" key="1">
+            {invoiceList.map((invoice, index) => (
+              <li className="py-3 sm:py-4" key={invoice._id || `invoice-${index}`}>
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0 text-white">
                     {invoice.status.toLowerCase() === "pending" ? (
