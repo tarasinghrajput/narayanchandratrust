@@ -6,7 +6,7 @@ Input.propTypes = {
       placeholder: PropTypes.string.isRequired,
       req: PropTypes.bool.isRequired,
       type: PropTypes.string.isRequired,
-      onChange: PropTypes.func.isRequired,
+      onChange: PropTypes.func,
       value: PropTypes.string,
     }).isRequired,
   };

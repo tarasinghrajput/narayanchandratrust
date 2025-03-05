@@ -26,6 +26,7 @@ function RegisterStudent() {
         hostel: hostel,
         password: password
       };
+      console.log("Sending Data:", student);
       const res = await fetch("http://localhost:3000/api/student/register-student", {
         method: "POST",
         headers: {
@@ -34,6 +35,7 @@ function RegisterStudent() {
         body: JSON.stringify(student),
       })
       const data = await res.json();
+      console.log("Response:", data); 
 
 
 
@@ -52,7 +54,7 @@ function RegisterStudent() {
 
       if (data.success) {
         toast.success(
-          'Student ' + data.student.name + ' Registered Successfully!', {
+          `Student ${data.student.name} Registered Successfully!`, {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -127,13 +129,12 @@ function RegisterStudent() {
   };
 
   const validateRoomNo = (value) => {
-    const num = parseInt(value, 10);
-    if (!/^\d+$/.test(value) || num < 1 || num > 35) {
-      setErrors((prev) => ({ ...prev, room_no: "Room number must be between 1 and 35." }));
+    if (!/^\d+$/.test(value) || value < 1 || value > 35) {
+      setErrors((prev) => ({ ...prev, room_no: "Room No must be between 1-35." }));
     } else {
       setErrors((prev) => ({ ...prev, room_no: "" }));
     }
-    setRoomNo(value);
+    setRoomNo(value); // ✅ Ensures state is updated
   };
 
   const validateBatch = (value) => {
@@ -270,7 +271,7 @@ function RegisterStudent() {
         <form method="post" onSubmit={registerStudent} className="flex flex-col gap-3">
           <div className="flex gap-5 flex-wrap justify-center md:w-full sw-[100vw]">
             <div className="flex flex-col">
-              <Input field={{ name: "name", placeholder: "Student Name", type: "text", req: true, value: name, onChange: (e) => validateName(e.target.value) }} />
+              <Input field={{ name: "name", placeholder: "Student Name", type: "text", req: true, value: name || "", onChange: (e) => validateName(e.target.value) }} />
               {errors.name && <p style={{ color: "red", fontSize: "10px" }}>{errors.name}</p>}
             </div>
 
@@ -281,7 +282,7 @@ function RegisterStudent() {
                   placeholder: "Student CMS",
                   type: "number",
                   req: true,
-                  value: cms,
+                  value: cms || "",
                   onChange: (e) => validateCms(e.target.value),
                 }}
               />
@@ -295,7 +296,7 @@ function RegisterStudent() {
                   placeholder: "Student dob",
                   type: "date",
                   req: true,
-                  value: dob,
+                  value: dob || "",
                   onChange: (e) => validateDob(e.target.value),
                 }}
               />
@@ -309,7 +310,7 @@ function RegisterStudent() {
                   placeholder: "Student Aadhar Card Number",
                   type: "text",
                   req: true,
-                  value: cnic,
+                  value: cnic || "",
                   onChange: (e) => validateCnic(e.target.value),
                 }}
               />
@@ -324,7 +325,7 @@ function RegisterStudent() {
                   placeholder: "Student Email",
                   type: "email",
                   req: true,
-                  value: email,
+                  value: email || "",
                   onChange: (e) => validateEmail(e.target.value),
                 }}
               />
@@ -338,7 +339,7 @@ function RegisterStudent() {
                   placeholder: "Student Contact",
                   type: "text",
                   req: true,
-                  value: contact,
+                  value: contact || "",
                   onChange: (e) => validateContact(e.target.value),
                 }}
               />
@@ -352,7 +353,7 @@ function RegisterStudent() {
                   placeholder: "Student's Father Name",
                   type: "text",
                   req: true,
-                  value: fatherName,
+                  value: fatherName || "",
                   onChange: (e) => validateFatherName(e.target.value),
                 }}
               />
@@ -371,7 +372,7 @@ function RegisterStudent() {
                 name="address"
                 placeholder="Student Address"
                 required
-                value={address}
+                value={address || ""}
                 onChange={(e) => setAddress(e.target.value)}
                 className="border flex-grow sm:text-sm rounded-lg block w-full p-2.5 bg-neutral-700 border-neutral-600 placeholder-gray-400 text-white focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
@@ -386,7 +387,7 @@ function RegisterStudent() {
                   placeholder: "Student Room",
                   type: "number",
                   req: true,
-                  value: room_no,
+                  value: room_no || "",
                   onChange: (e) => validateRoomNo(e.target.value),
                 }}
               />
@@ -400,7 +401,7 @@ function RegisterStudent() {
                   placeholder: "Student Hostel",
                   type: "text",
                   req: true,
-                  value: hostel,
+                  value: hostel || "",
                   disabled: true,
                 }}
               />
@@ -413,7 +414,7 @@ function RegisterStudent() {
                   placeholder: "Student Department",
                   type: "text",
                   req: true,
-                  value: dept,
+                  value: dept || "",
                   onChange: (e) => validateDept(e.target.value),
                 }}
               />
@@ -428,7 +429,7 @@ function RegisterStudent() {
                   placeholder: "Student Course",
                   type: "text",
                   req: true,
-                  value: course,
+                  value: course || "",
                   onChange: (e) => validateCourse(e.target.value),
                 }}
               />
@@ -442,7 +443,7 @@ function RegisterStudent() {
                   placeholder: "Student Batch",
                   type: "number",
                   req: true,
-                  value: batch,
+                  value: batch || "",
                   onChange: (e) => validateBatch(e.target.value),
                 }}
               />
@@ -457,7 +458,7 @@ function RegisterStudent() {
                   placeholder: "Student Password",
                   type: "password",
                   req: true,
-                  value: password,
+                  value: password || "",
                   onChange: (e) => validatePassword(e.target.value),
                 }}
               />
