@@ -51,13 +51,19 @@ const getAttendance = async (req, res) => {
     const { student } = req.body;
     try {
         const attendance = await Attendance.find({ student });
+
+        if (attendance.length === 0) {
+            return res.status(200).json({ success: true, attendance: [] });  // ✅ Ensure empty array
+        }
+
         success = true;
         res.status(200).json({ success, attendance });
     }
     catch (err) {
         res.status(500).json({ success, error: err.message });
     }
-}
+};
+
 
 const updateAttendance = async (req, res) => {
     const errors = validationResult(req);
