@@ -56,6 +56,26 @@ function Invoices() {
       });
   }, []);  // ✅ Removed dependencies to prevent unnecessary re-renders
 
+  // const handlePayment = async (invoice) => {
+  //   if (!invoice || !invoice.amount) {
+  //     console.error("Error: Invoice is undefined or missing amount");
+  //     alert("Something went wrong. Please try again.");
+  //     return;
+  //   }
+
+  //   // ✅ Remove ₹ symbol and extract numeric amount
+  //   const amount = Number(invoice.amount.replace("₹ ", ""));
+
+  //   // ✅ Redirect user to the Stripe test checkout page
+  //   // const stripeTestURL = "https://buy.stripe.com/test_fZecOm3UK6qFfCg28a";
+  //   window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`;
+
+  //   // Add query parameters for tracking payments
+  //   // const paymentURL = `${stripeTestURL}?amount=${amount}&studentId=${student._id}&invoiceId=${invoice._id}`;
+
+  //   // window.location.href = paymentURL;
+  // };
+
   const handlePayment = async (invoice) => {
     if (!invoice || !invoice.amount) {
       console.error("Error: Invoice is undefined or missing amount");
@@ -63,17 +83,34 @@ function Invoices() {
       return;
     }
 
-    // ✅ Remove ₹ symbol and extract numeric amount
-    const amount = Number(invoice.amount.replace("₹ ", ""));
+    try {
+      console.log("📩 Sending payment request for invoice:", invoice);
 
-    // ✅ Redirect user to the Stripe test checkout page
-    const stripeTestURL = "https://buy.stripe.com/test_fZecOm3UK6qFfCg28a";
+      const response = await fetch("http://localhost:3000/api/payment/create-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: student._id, amount: invoice.amount.replace("₹ ", "") }),  // ✅ Convert amount
+      });
 
-    // Add query parameters for tracking payments
-    const paymentURL = `${stripeTestURL}?amount=${amount}&studentId=${student._id}&invoiceId=${invoice._id}`;
+      const data = await response.json();
+      console.log("🛜 Server Response Data:", data);
 
-    window.location.href = paymentURL;
+      if (data.success) {
+        console.log("✅ Redirecting to Stripe Checkout:", data.sessionUrl);
+        window.location.href = data.sessionUrl;  // ✅ Redirects to Stripe
+      } else {
+        console.error("❌ Payment session creation failed:", data.message);
+        alert("Payment failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("❌ Payment Error:", error);
+      alert("Something went wrong.");
+    }
   };
+
+
+
+
 
 
 

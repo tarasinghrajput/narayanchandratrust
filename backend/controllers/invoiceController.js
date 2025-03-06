@@ -49,16 +49,12 @@ exports.confirmPayment = async (req, res) => {
 // @access  Public
 exports.generateInvoices = async (req, res) => {
     let success = false;
-    console.log("📩 Raw Request Body:", req.body); // ✅ Logs received body
-    console.log("📩 Request Headers:", req.headers);
     const { hostel } = req.body;
     if (!hostel) {
         return res.status(400).json({ success: false, message: "Hostel is required!" });
     }
     
-    console.log(`🔍 Searching for students in hostel: ${hostel}`);
     const students = await Student.find({ hostel });
-    console.log("📌 Students found for invoice generation:", students); 
     if (students.length === 0) {
         return res.status(400).json({ success: false, message: "No students found for this hostel." });
     }
@@ -67,7 +63,6 @@ exports.generateInvoices = async (req, res) => {
     let amount = Mess_bill_per_day * daysInLastMonth;
 
     for (let student of students) {
-        console.log(`🔍 Checking invoices for student: ${student._id}`);
 
         const existingInvoice = await Invoice.findOne({
             student: student._id,

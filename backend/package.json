@@ -19,7 +19,8 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.1.0",
     "nodemailer": "^6.10.0",
-    "stripe": "^17.7.0"
+    "stripe": "^17.7.0",
+    "stripe-cli": "^0.1.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
