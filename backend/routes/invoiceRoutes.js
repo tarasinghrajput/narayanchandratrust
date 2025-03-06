@@ -3,6 +3,18 @@ const router = express.Router()
 const { check } = require('express-validator')
 const { generateInvoices, getInvoicesbyid, getInvoices, updateInvoice } = require('../controllers/invoiceController')
 
+// @route   GET api/invoice/student
+// @desc    Get all invoices
+// @access  Public
+router.get('/student', (req, res) => {
+    res.status(400).json({ success: false, message: "Use POST request with student ID" });
+});
+
+router.post('/student', [
+    check('student', 'Student is required').not().isEmpty()
+], getInvoices);
+
+
 // @route   Generate api/invoice/generate
 // @desc    Generate invoice
 // @access  Public
@@ -17,12 +29,6 @@ router.post('/getbyid', [
     check('hostel', 'Hostel is required').not().isEmpty()
 ], getInvoicesbyid);
 
-// @route   GET api/invoice/student
-// @desc    Get all invoices
-// @access  Public
-router.post('/student', [
-    check('student', 'Student is required').not().isEmpty()
-], getInvoices);
 
 // @route   GET api/invoice/update
 // @desc    Update invoice

@@ -60,8 +60,8 @@ const List = () => {
       </div>
       <div className="flow-root">
         <ul role="list" className="divide-y divide-gray-700">
-          {invoiceList.map((invoice) => (
-            <li className="py-3 sm:py-4" key="1">
+          {invoiceList.map((invoice, index) => (
+            <li className="py-3 sm:py-4" key={invoice.title + index}>
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0 text-white">
                   {invoice.status.toLowerCase() === "pending" ? (
@@ -120,31 +120,27 @@ function Home() {
   let student = JSON.parse(localStorage.getItem("student"));
 
   const getAttendance = async () => {
-    let student = JSON.parse(localStorage.getItem("student"));
-    const res = await fetch("http://localhost:3000/api/attendance/get", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ student: student._id }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      let daysOff = 0;
-      data.attendance.map((day) => {
-        if (day.status === "absent") {
-          daysOff++;
-        }
+    try {
+      const res = await fetch("http://localhost:3000/api/attendance/get", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student: student._id }),
       });
-      setDaysOff(daysOff);
-    } else {
-      // console.log("Error");
+  
+      const data = await res.json();
+      if (data.success && data.attendance.length > 0) {  // ✅ Check if attendance exists
+        let daysOff = data.attendance.filter(day => day.status === "absent").length;
+        setDaysOff(daysOff);
+      } else {
+        console.warn("No attendance records found for this student.");
+        setDaysOff(0);  // ✅ Set 0 if no attendance
+      }
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+      setDaysOff(0);  // ✅ Prevents undefined errors
     }
   };
-
-  useEffect(() => {
-    getAttendance();
-  }, []);
+  
 
   const labels = ["Days off", "Days present"];
   let totalDays = new Date();

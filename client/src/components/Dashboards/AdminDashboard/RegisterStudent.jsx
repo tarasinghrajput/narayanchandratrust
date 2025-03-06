@@ -26,7 +26,7 @@ function RegisterStudent() {
         hostel: hostel,
         password: password
       };
-      console.log("Sending Data:", student);
+      // console.log("Sending Data:", student);
       const res = await fetch("http://localhost:3000/api/student/register-student", {
         method: "POST",
         headers: {
@@ -35,7 +35,7 @@ function RegisterStudent() {
         body: JSON.stringify(student),
       })
       const data = await res.json();
-      console.log("Response:", data); 
+      // console.log("Response:", data); 
 
 
 

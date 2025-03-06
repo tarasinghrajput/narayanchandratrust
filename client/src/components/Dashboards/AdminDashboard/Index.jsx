@@ -201,6 +201,7 @@ useEffect(() => {
 
 return (
   <div className="flex">
+  <link rel="icon" type="image/png" href="/nct-logo.png"></link>
     <Sidebar links={links} />
     <Topbar name={admin.name || "Admin"} notifications={notifications} />
     <div className="w-full bg-stone-900 h-screen">

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../Common/Sidebar";
 import { Topbar } from "../Common/Topbar";
@@ -86,6 +87,15 @@ export default function Index() {
       ),
     },
     {
+      text: "Payments",
+      url: "/student-dashboard/payments",
+      svg: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4ZM20 18H4V6H20V18ZM6 10H10V12H6V10Z" fill="currentColor" />
+        </svg>
+      ),
+    },
+    {
       text: "Complaints",
       url: "/student-dashboard/complaints",
       svg: (
@@ -137,7 +147,7 @@ export default function Index() {
       try {
         const res = await fetch(`http://localhost:3000/api/notifications/Student/${student._id}`);
         const data = await res.json();
-  
+
         if (data.success) {
           setNotifications(data.notifications.map((notif) => notif.message));
         }
@@ -145,7 +155,7 @@ export default function Index() {
         console.error("Error fetching notifications:", error);
       }
     };
-  
+
     fetchNotifications();
   }, []);
 

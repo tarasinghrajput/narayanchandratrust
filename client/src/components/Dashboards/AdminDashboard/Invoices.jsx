@@ -182,10 +182,10 @@ function Invoices() {
         <ul role="list" className="divide-y divide-gray-700 text-white">
           {pendingInvoices.length === 0
             ? "No Students Found"
-            : pendingInvoices.map((invoice) => (
+            : pendingInvoices.map((invoice, index) => (
                 <li
                   className="py-3 px-5 rounded sm:py-4 hover:bg-neutral-700 hover:scale-105 transition-all"
-                  key={invoice.id}
+                  key={invoice._id || `invoice-${index}`}
                 >
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0 text-white">
