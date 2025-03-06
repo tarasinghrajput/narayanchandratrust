@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import jspdf from "jspdf";
+// import jspdf from "jspdf";
 
-const downloadInvoice = (invoice) => {
-  const doc = new jsPDF();
-  doc.text(`Invoice: ${invoice.title}`, 10, 10);
-  doc.text(`Amount: ${invoice.amount}`, 10, 20);
-  doc.text(`Status: ${invoice.status}`, 10, 30);
-  doc.save(`${invoice.title}.pdf`);
-};
+// const downloadInvoice = (invoice) => {
+//   const doc = new jsPDF();
+//   doc.text(`Invoice: ${invoice.title}`, 10, 10);
+//   doc.text(`Amount: ${invoice.amount}`, 10, 20);
+//   doc.text(`Status: ${invoice.status}`, 10, 30);
+//   doc.save(`${invoice.title}.pdf`);
+// };
 
 let student = JSON.parse(localStorage.getItem("student"));
 
@@ -37,6 +37,7 @@ function Invoices() {
             } else {
               pendingInvoicesCount += 1;
             }
+            console.log(invoice.title);
             let date = new Date(invoice.date);
             invoice.date = date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
             List.push({
@@ -62,26 +63,18 @@ function Invoices() {
       return;
     }
 
-    try {
-      const response = await fetch("http://localhost:3000/api/payment/create-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId: student._id, amount: invoice.amount.replace("₹ ", "") }),  // ✅ Remove ₹ symbol
-      });
+    // ✅ Remove ₹ symbol and extract numeric amount
+    const amount = Number(invoice.amount.replace("₹ ", ""));
 
-      const data = await response.json();
+    // ✅ Redirect user to the Stripe test checkout page
+    const stripeTestURL = "https://buy.stripe.com/test_fZecOm3UK6qFfCg28a";
 
-      if (data.success) {
-        window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`;
-      } else {
-        console.error("Payment session creation failed");
-        alert("Payment failed. Try again.");
-      }
-    } catch (error) {
-      console.error("Payment Error:", error);
-      alert("Something went wrong.");
-    }
+    // Add query parameters for tracking payments
+    const paymentURL = `${stripeTestURL}?amount=${amount}&studentId=${student._id}&invoiceId=${invoice._id}`;
+
+    window.location.href = paymentURL;
   };
+
 
 
 
@@ -117,50 +110,22 @@ function Invoices() {
           <h5 className="text-xl font-bold leading-none text-white">
             Latest Invoices
           </h5>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => handlePayment(invoice)}>
-            Pay Now
-          </button>
         </div>
         <div className="flow-root">
           <ul role="list" className="divide-y divide-gray-700">
             {invoiceList.map((invoice, index) => (
               <li className="py-3 sm:py-4" key={invoice._id || `invoice-${index}`}>
                 <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0 text-white">
-                    {invoice.status.toLowerCase() === "pending" ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        className="w-8 h-8"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        className="w-8 h-8"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    )}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate text-white">{invoice.title}</p>
                     <p className="text-sm truncate text-gray-400">{invoice.date}</p>
                   </div>
-                  <div className="flex flex-col items-center text-base font-semibold text-white">{invoice.amount}</div>
+                  <div className="flex flex-col items-center text-base font-semibold text-white">
+                    {invoice.amount}
+                  </div>
                   <button
                     className="bg-blue-500 text-white px-4 py-2 rounded"
-                    onClick={() => handlePayment(invoice)} // ✅ Pass correct invoice
+                    onClick={() => handlePayment(invoice)} // ✅ Now correctly passing invoice
                   >
                     Pay Now
                   </button>

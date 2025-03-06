@@ -49,19 +49,35 @@ exports.confirmPayment = async (req, res) => {
 // @access  Public
 exports.generateInvoices = async (req, res) => {
     let success = false;
+    console.log("📩 Raw Request Body:", req.body); // ✅ Logs received body
+    console.log("📩 Request Headers:", req.headers);
     const { hostel } = req.body;
-    const students = await Student.find({ hostel });
+    if (!hostel) {
+        return res.status(400).json({ success: false, message: "Hostel is required!" });
+    }
     
+    console.log(`🔍 Searching for students in hostel: ${hostel}`);
+    const students = await Student.find({ hostel });
+    console.log("📌 Students found for invoice generation:", students); 
+    if (students.length === 0) {
+        return res.status(400).json({ success: false, message: "No students found for this hostel." });
+    }
+
     let daysInLastMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
     let amount = Mess_bill_per_day * daysInLastMonth;
 
     for (let student of students) {
+        console.log(`🔍 Checking invoices for student: ${student._id}`);
+
         const existingInvoice = await Invoice.findOne({
             student: student._id,
             date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
         });
 
-        if (existingInvoice) continue; // Skip if invoice already exists
+        if (existingInvoice) {
+            console.log(`⚠️ Invoice already exists for student: ${student._id}, skipping.`);
+            continue; // Skip if invoice already exists
+        }
 
         let invoice = new Invoice({
             student: student._id,
@@ -71,12 +87,18 @@ exports.generateInvoices = async (req, res) => {
             date: new Date()
         });
 
-        await invoice.save();
+        try {
+            await invoice.save();
+            console.log(`✅ Invoice saved for student: ${student._id}`);
+        } catch (error) {
+            console.error(`❌ Error saving invoice for student ${student._id}:`, error);
+        }
     }
 
     success = true;
     res.status(200).json({ success, message: "Invoices generated!" });
 };
+
 
 
 // @route   GET api/invoice/getbyid
