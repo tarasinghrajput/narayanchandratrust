@@ -90,22 +90,26 @@ exports.changePassword = async (req, res, next) => {
     }
 }
 
-exports.verifySession = async (req, res, next) => {
-    let success = false;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({errors: errors.array(), success});
-    }
+exports.verifySession = async (req, res) => {
     try {
-        const { token } = req.body;
-        const decoded = verifyToken(token);
-        if (decoded) {
-            success = true;
-            return res.status(200).json({success, data: decoded});
+        const token = req.headers.authorization?.split(" ")[1];  // ✅ Get token from header
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: "No token provided." });
         }
-        return res.status(400).json({success, "message": "Invalid token"});
-    } catch (err) {
-        console.error(err.message);
-        return res.status(500).json({success, "message": "Server Error"});
+
+        // ✅ Verify Token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        res.status(200).json({ success: true, user });
+    } catch (error) {
+        console.error("❌ Session Verification Failed:", error.message);
+        res.status(500).json({ success: false, message: "Internal Server Error." });
     }
-}
+};
+
