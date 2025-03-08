@@ -6,9 +6,9 @@ const { generateInvoices, getInvoicesbyid, getInvoices, updateInvoice } = requir
 // @route   GET api/invoice/student
 // @desc    Get all invoices
 // @access  Public
-router.get('/student', (req, res) => {
-    res.status(400).json({ success: false, message: "Use POST request with student ID" });
-});
+// router.get('/student', (req, res) => {
+//     res.status(400).json({ success: false, message: "Use POST request with student ID" });
+// });
 
 router.post('/student', [
     check('student', 'Student is required').not().isEmpty()
@@ -22,13 +22,12 @@ router.post('/generate', [
     check('hostel', 'Hostel is required').not().isEmpty(),
 ], generateInvoices);
 
-// @route   GET api/invoice/getbyid
+// @route   POST api/invoice/getbyid
 // @desc    Get all invoices
 // @access  Public
 router.post('/getbyid', [
-    check('hostel', 'Hostel is required').not().isEmpty()
+    check('hostel', 'Hostel ID is required').not().isEmpty()
 ], getInvoicesbyid);
-
 
 // @route   GET api/invoice/update
 // @desc    Update invoice
