@@ -11,8 +11,6 @@ import 'react-toastify/dist/ReactToastify.css';
 //   doc.save(`${invoice.title}.pdf`);
 // };
 
-const student = JSON.parse(localStorage.getItem("student")) || {};
-
 function Invoices() {
   const [invoiceList, setInvoiceList] = useState([]);
   // const [totalInvoices, setTotalInvoices] = useState(0);
@@ -71,6 +69,7 @@ function Invoices() {
   const [paidInvoices, setPaidInvoices] = useState(0);
 
   useEffect(() => {
+    let student = JSON.parse(localStorage.getItem("student")) || {};
     fetch("http://localhost:3000/api/invoice/student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
