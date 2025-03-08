@@ -6,8 +6,9 @@ const { Mess_bill_per_day } = require('../constants/mess');
 // const sendEmail = require("../utils/emailService");
 const nodemailer = require("nodemailer");
 const Payment = require("../models/Payment");
-const bcrypt = require('bcryptjs');
-const Parser = require('json2csv').Parser;
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 exports.confirmPayment = async (req, res) => {
     const { session_id } = req.query;
@@ -254,9 +255,12 @@ exports.updateInvoice = async (req, res) => {
     }
 }
 
-exports.csvInvoice = async (req, res) => {
+
+
+exports.pdfInvoice = async (req, res) => {
     let success = false;
     try {
+        // Validate request
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ success, errors: errors.array() });
@@ -265,39 +269,76 @@ exports.csvInvoice = async (req, res) => {
         const { student } = req.body;
         const invoices = await Invoice.find({ student: student._id });
 
+        if (!invoices.length) {
+            return res.status(404).json({ success, errors: [{ msg: "No invoices found" }] });
+        }
+
         // Get current month and year
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const currentMonth = monthNames[new Date().getMonth()];
         const currentYear = new Date().getFullYear();
 
-        // Ensure invoices contain student data
-        const formattedInvoices = invoices.map(invoice => ({
-            name: student.name,
-            cms_id: student.cms_id,
-            room_no: student.room_no,
-            batch: student.batch,
-            dept: student.dept,
-            course: student.course,
-            email: student.email,
-            father_name: student.father_name,
-            address: student.address,
-            d_o_b: student.d_o_b,
-            title: `Hostel Fees - ${currentMonth} ${currentYear}`,
-            date: new Date().toDateString().slice(4),
-            amount: 8400
-        }));
+        // Ensure invoices directory exists
+        const invoicesDir = path.join(__dirname, "../invoices");
+        if (!fs.existsSync(invoicesDir)) {
+            console.log("Creating invoices directory...");
+            fs.mkdirSync(invoicesDir, { recursive: true });
+        }
 
-        const fields = ['name', 'cms_id', 'room_no', 'batch', 'dept', 'course', 'email', 'father_name', 'address', 'd_o_b', 'title', 'date', 'amount'];
-        const opts = { fields };
+        // Define PDF file path
+        const pdfPath = path.join(invoicesDir, `invoice_${student._id}.pdf`);
+        console.log("Attempting to write PDF to:", pdfPath);
 
-        const parser = new Parser(opts);
-        const csv = parser.parse(formattedInvoices);
+        // Create and write PDF
+        const doc = new PDFDocument();
+        const writeStream = fs.createWriteStream(pdfPath);
 
-        success = true;
-        res.json({ success, csv });
+        // Pipe document to the stream
+        doc.pipe(writeStream);
+
+        // Add Title
+        doc.fontSize(20).text(`Invoice - ${currentMonth} ${currentYear}`, { align: "center" }).moveDown(2);
+
+        // Student Information
+        doc.fontSize(14).text(`Name: ${student.name}`);
+        doc.text(`CMS ID: ${student.cms_id}`);
+        doc.text(`Room No: ${student.room_no}`);
+        doc.text(`Batch: ${student.batch}`);
+        doc.text(`Department: ${student.dept}`);
+        doc.text(`Course: ${student.course}`);
+        doc.text(`Email: ${student.email}`);
+        doc.text(`Father's Name: ${student.father_name}`);
+        doc.text(`Address: ${student.address}`);
+        doc.text(`Date of Birth: ${student.dob}`).moveDown(2);
+
+        // Invoice Details
+        doc.fontSize(16).text(`Invoice Details:`, { underline: true }).moveDown();
+        invoices.forEach((invoice, index) => {
+            doc.fontSize(14).text(`${index + 1}. ${invoice.title}`);
+            doc.text(`Date: ${new Date(invoice.date).toDateString()}`);
+            doc.text(`Amount: ₹${invoice.amount}`);
+            doc.text(`Status: ${invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}`).moveDown();
+        });
+
+        // Finalize and close PDF document
+        doc.end();
+
+        // Handle PDF write completion
+        writeStream.on("finish", () => {
+            console.log("PDF successfully written:", pdfPath);
+            success = true;
+            res.download(pdfPath, `invoice_${student._id}.pdf`);
+        });
+
+        // Handle any write errors
+        writeStream.on("error", (err) => {
+            console.error("Error writing PDF file:", err);
+            return res.status(500).json({ success, errors: [{ msg: "Error writing PDF file" }] });
+        });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success, errors: [{ msg: 'Server error' }] });
+        console.error("Error occurred while creating PDF:", err);
+        res.status(500).json({ success, errors: [{ msg: "Server error" }] });
     }
 };
+

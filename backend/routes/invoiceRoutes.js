@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const { check } = require('express-validator')
 const { generateInvoices, getInvoicesbyid, getInvoices, updateInvoice } = require('../controllers/invoiceController')
-const { confirmPayment, csvInvoice } = require("../controllers/invoiceController");
+const { confirmPayment, pdfInvoice } = require("../controllers/invoiceController");
 
 // @route   GET api/invoice/student
 // @desc    Get all invoices
@@ -43,11 +43,11 @@ router.post('/update', [
     check('status', 'Status is required').not().isEmpty()
 ], updateInvoice);
 
-// @route  POST api/invoice/csv
+// @route  POST api/invoice/pdf
 // @desc   Get CSV of students
 // @access Public
-router.post('/csv', [
+router.post('/pdf', [
     check('student', 'StudentID is required').not().isEmpty()
-], csvInvoice);
+], pdfInvoice);
 
 module.exports = router;

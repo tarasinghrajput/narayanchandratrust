@@ -108,40 +108,46 @@ function Invoices() {
       });
   }, []);  // ✅ Removed dependencies to prevent unnecessary re-renders
 
-  const getCSV = async () => {
+  const getPDF = async () => {
     let student = JSON.parse(localStorage.getItem('student'));
-      const res = await fetch("http://localhost:3000/api/invoice/csv", {                                              
+
+    const res = await fetch("http://localhost:3000/api/invoice/pdf", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({ student }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        const link = document.createElement('a');
-        link.href = "data:text/csv;charset=utf-8," + escape(data.csv);
-        link.download = 'invoice.csv';
-        link.click();
-        toast.success(
-          'CSV Downloaded Successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
+    });
+
+    if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "invoice.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        toast.success("PDF Downloaded Successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
         });
-      } else {
-        toast.error(
-          data.errors[0].msg, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-        })
-      }
-    };
+    } else {
+        const data = await res.json();
+        toast.error(data.errors[0].msg, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+        });
+    }
+};
+
 
   // const handlePayment = async (invoice) => {
   //   if (!invoice || !invoice.amount) {
@@ -219,7 +225,7 @@ function Invoices() {
                   </div>
                     <button
                       className="bg-green-500 text-white px-4 py-2 rounded"
-                      onClick={getCSV} // ✅ Correct function for downloading
+                      onClick={getPDF} // ✅ Correct function for downloading
                       target="_blank"
                       download={true}
                     >
