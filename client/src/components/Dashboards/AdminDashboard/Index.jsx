@@ -149,6 +149,27 @@ export default function Index() {
       ),
     },
     {
+      text: "Rooms",
+      url: "/admin-dashboard/rooms",
+      svg: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"  // Changed to camelCase
+          strokeLinecap="round"  // Changed to camelCase
+          strokeLinejoin="round"  // Changed to camelCase
+        >
+          <rect x="3" y="3" width="18" height="18" />
+          <rect x="14" y="8" width="5" height="10" />
+          <circle cx="16.5" cy="13" r="0.5" fill="currentColor" />
+        </svg>
+      ),
+    },
+    {
       text: "All Students",
       url: "/admin-dashboard/all-students",
       svg: (
@@ -172,41 +193,41 @@ export default function Index() {
 
   const admin = JSON.parse(localStorage.getItem("admin")) || {};
 
-  const [notifications, setNotifications] = useState([]);
+  // const [notifications, setNotifications] = useState([]);
 
   const navigate = useNavigate();
 
-useEffect(() => {
-  if (!admin) {
-    navigate("/auth/login"); // Redirect to login if admin is null
-  }
-}, [admin, navigate]);
-
-useEffect(() => {
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:3000/api/notifications/Admin/${admin._id}`);
-      const data = await res.json();
-
-      if (data.success) {
-        setNotifications(data.notifications.map((notif) => notif.message));
-      }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
+  useEffect(() => {
+    if (!admin) {
+      navigate("/auth/login"); // Redirect to login if admin is null
     }
-  };
+  }, [admin, navigate]);
 
-  fetchNotifications();
-}, []);
+  // useEffect(() => {
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const res = await fetch(`http://localhost:3000/api/notifications/Admin/${admin._id}`);
+  //       const data = await res.json();
 
-return (
-  <div className="flex">
-  <link rel="icon" type="image/png" href="/nct-logo.png"></link>
-    <Sidebar links={links} />
-    <Topbar name={admin.name || "Admin"} notifications={notifications} />
-    <div className="w-full bg-stone-900 h-screen">
-      <Outlet />
+  //       if (data.success) {
+  //         setNotifications(data.notifications.map((notif) => notif.message));
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching notifications:", error);
+  //     }
+  //   };
+
+  //   fetchNotifications();
+  // }, []);
+
+  return (
+    <div className="flex">
+      <link rel="icon" type="image/png" href="/nct-logo.png"></link>
+      <Sidebar links={links} />
+      <Topbar name={admin.name || "Admin"}/>
+      <div className="w-full bg-stone-900 h-screen">
+        <Outlet />
+      </div>
     </div>
-  </div>
-);
+  );
 }

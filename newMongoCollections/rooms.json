@@ -1,24 +1,27 @@
 [
-    {
-      "room_no": {
-        "$oid" : 
-      },
-      "capacity": 3,
-      "type": "Single",
-      "isAvailable": true
-    },
-    {
-      "room_id": "R002",
-      "room_no": "102",
-      "capacity": 2,
-      "type": "Double",
-      "isAvailable": false
-    },
-    {
-      "room_id": "R003",
-      "room_no": "103",
-      "capacity": 4,
-      "type": "Dormitory",
-      "isAvailable": true
-    }
-  ]
+{
+  "_id": {
+    "$oid": "665f4d87e4b0a1d86cf3b7a2" 
+  },
+  "roomNumber": "1",
+  "capacity": 2,
+  "currentOccupants": [
+    {"$oid": "67c66612e272ac187d8ea93b"},
+    {"$oid": "67cb8e7b55ae9619f45cbbc0"}
+  ],
+  "status": "Occupied",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "665f4d87e4b0a1d86cf3b7a3"
+  },
+  "roomNumber": "2",
+  "capacity": 2,
+  "currentOccupants": {
+    "$oid": "67c7d2cb89beeb6825d76e5d"
+  },
+  "status": "available",
+  "__v": 0
+}
+]

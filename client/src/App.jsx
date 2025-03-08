@@ -27,6 +27,7 @@ import AdminSuggestions from './components/Dashboards/AdminDashboard/Suggestions
 import AdminSettings from './components/Dashboards/AdminDashboard/Settings'
 import AllStudents from "./components/Dashboards/AdminDashboard/AllStudents";
 import AdminMess from "./components/Dashboards/AdminDashboard/Maintenance";
+import RoomsStatus from "./components/RoomsStatus";
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminIndex />}>
           <Route index element={<AdminHome />} />
           <Route path='register-student' element={<RegisterStudent />} />
+          <Route path="rooms" element={<RoomsStatus />} />
           <Route path="attendance" element={<AdminAttendance />} />
           <Route path="complaints" element={<AdminComplaints />} />
           <Route path="invoices" element={<AdminInvoices/>} />

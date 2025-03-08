@@ -118,7 +118,7 @@ function Sidebar({ links }) {
               }`}
             >
               {link.svg}
-              {link.text} {/* Ensures `for` is never undefined */}
+              {link.text}
             </Link>
           ))}
         </div>
