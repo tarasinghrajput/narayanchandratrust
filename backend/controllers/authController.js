@@ -106,7 +106,7 @@ exports.verifySession = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
-        res.status(200).json({ success: true, user });
+        res.status(200).json({ success: true, isAdmin: user.isAdmin });
     } catch (error) {
         console.error("❌ Session Verification Failed:", error.message);
         res.status(500).json({ success: false, message: "Internal Server Error." });
