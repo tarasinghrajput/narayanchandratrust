@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const { registerStudent, getStudent, getAllStudents, updateStudent, deleteStudent, csvStudent } = require('../controllers/studentController');
-
+const { getBatchStudents } = require("../controllers/studentController");
 
 // @route  POST api/student/register-student
 // @desc   Register student
@@ -71,6 +71,14 @@ router.delete('/delete-student', [
 router.post('/csv', [
     check('hostel', 'Hostel is required').not().isEmpty()
 ], csvStudent);
+
+
+// @route  POST api/student/batch
+// @desc   Get CSV of students
+// @access Public
+router.post('/batch', [
+    check('id', 'Studen Ids are required').not().isEmpty()
+], getBatchStudents);
 
 
 module.exports = router;
