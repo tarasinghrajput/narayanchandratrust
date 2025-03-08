@@ -55,7 +55,6 @@ exports.createSession = async (req, res) => {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
-            customer_creation: "always",
             line_items: [
                 {
                     price_data: {
@@ -66,6 +65,9 @@ exports.createSession = async (req, res) => {
                     quantity: 1,
                 },
             ],
+            metadata: {
+                studentId: student._id // ✅ Ensure student ID is stored
+            },
             billing_address_collection: "required",
             shipping_address_collection: { allowed_countries: ["IN"] },
             success_url: `http://localhost:5173/student-dashboard/invoices?success=true&session_id={CHECKOUT_SESSION_ID}`,

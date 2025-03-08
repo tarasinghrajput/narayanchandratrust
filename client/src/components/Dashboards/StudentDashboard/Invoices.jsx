@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { ToastContainer ,toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 // import jspdf from "jspdf";
 
 // const downloadInvoice = (invoice) => {
@@ -17,91 +19,130 @@ function Invoices() {
   // const [pendingInvoices, setPendingInvoices] = useState(0);
   // const [paidInvoices, setPaidInvoices] = useState(0);
 
+  // useEffect(() => {
+  //   const fetchInvoices = async () => {
+  //     // let student = JSON.parse(localStorage.getItem("student"));
+
+  //     try {
+  //       const res = await fetch("http://localhost:3000/api/invoice/student", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ student: student._id }),
+  //       });
+
+  //       const data = await res.json();
+  //       if (data.success) {
+  //         setInvoiceList(data.invoices);
+  //       } else {
+  //         console.error("❌ Error fetching invoices:", data.message);
+  //       }
+  //     } catch (err) {
+  //       console.error("❌ Network error:", err);
+  //     }
+
+  //     // Fetch invoices initially
+  //     fetchInvoices();
+
+  //     // ✅ Fetch updated invoice if redirected from Stripe
+  //     if (sessionId) {
+  //       fetch(`http://localhost:3000/api/invoice/confirm-payment?session_id=${sessionId}`)
+  //         .then((res) => res.json())
+  //         .then((data) => {
+  //           if (data.success) {
+  //             alert("✅ Payment confirmed! Invoice updated.");
+  //             window.location.href = "/student-dashboard/invoices";
+  //           } else {
+  //             alert(`❌ Error: ${data.message}`);
+  //           }
+  //         })
+  //         .catch((err) => {
+  //           console.error("❌ Payment confirmation error:", err);
+  //           alert("❌ Server error while confirming payment.");
+  //         });
+  //     }
+  //   }
+  // }, []);
+
+
+
+
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const [pendingInvoices, setPendingInvoices] = useState(0);
+  const [paidInvoices, setPaidInvoices] = useState(0);
+
   useEffect(() => {
-    const fetchInvoices = async () => {
-      // let student = JSON.parse(localStorage.getItem("student"));
-      if (!student) return;
+    fetch("http://localhost:3000/api/invoice/student", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student: student._id }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          let invoices = data.invoices;
+          let List = [];
+          let paidInvoicesCount = 0;
+          let pendingInvoicesCount = 0;
 
-      const response = await fetch("http://localhost:3000/api/invoice/student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId: student._id }),
+          invoices.forEach((invoice) => {
+            if (invoice.status.toLowerCase() === "paid") {
+              paidInvoicesCount += 1;
+            } else {
+              pendingInvoicesCount += 1;
+            }
+            console.log(invoice.title);
+            let date = new Date(invoice.date);
+            invoice.date = date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+            List.push({
+              title: invoice.title,
+              amount: "₹ " + invoice.amount,
+              status: invoice.status,
+              date: invoice.date,
+            });
+          });
+
+          setInvoiceList(List);
+          setTotalInvoices(invoices.length);
+          setPaidInvoices(paidInvoicesCount);
+          setPendingInvoices(pendingInvoicesCount);
+        }
       });
+  }, []);  // ✅ Removed dependencies to prevent unnecessary re-renders
 
-      const data = await response.json();
+  const getCSV = async () => {
+    let student = JSON.parse(localStorage.getItem('student'));
+      const res = await fetch("http://localhost:3000/api/invoice/csv", {                                              
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ student }),
+      });
+      const data = await res.json();
       if (data.success) {
-        setInvoiceList(data.invoices);
+        const link = document.createElement('a');
+        link.href = "data:text/csv;charset=utf-8," + escape(data.csv);
+        link.download = 'invoice.csv';
+        link.click();
+        toast.success(
+          'CSV Downloaded Successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+        });
+      } else {
+        toast.error(
+          data.errors[0].msg, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+        })
       }
     };
-
-    // Fetch invoices initially
-    fetchInvoices();
-
-    // ✅ Fetch updated invoice if redirected from Stripe
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session_id");
-
-    if (sessionId) {
-      fetch(`http://localhost:3000/api/invoice/confirm-payment?session_id=${sessionId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("✅ Payment confirmation response:", data);
-          if (data.success) {
-            alert("Payment confirmed! Invoice updated.");
-            window.location.href = "/student-dashboard/invoices"; // ✅ Refresh page
-          } else {
-            console.error("❌ Error confirming payment:", data.message);
-          }
-        })
-        .catch((err) => console.error("❌ Payment confirmation error:", err));
-    }
-  }, []);
-
-
-
-
-  // const [totalInvoices, setTotalInvoices] = useState(0);
-  // const [pendingInvoices, setPendingInvoices] = useState(0);
-  // const [paidInvoices, setPaidInvoices] = useState(0);
-
-  // useEffect(() => {
-  //   fetch("http://localhost:3000/api/invoice/student", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ student: student._id }),
-  //   })
-  //     .then((res) => res.json())
-  //     .then((data) => {
-  //       if (data.success) {
-  //         let invoices = data.invoices;
-  //         let List = [];
-  //         let paidInvoicesCount = 0;
-  //         let pendingInvoicesCount = 0;
-
-  //         invoices.forEach((invoice) => {
-  //           if (invoice.status.toLowerCase() === "paid") {
-  //             paidInvoicesCount += 1;
-  //           } else {
-  //             pendingInvoicesCount += 1;
-  //           }
-  //           console.log(invoice.title);
-  //           let date = new Date(invoice.date);
-  //           invoice.date = date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
-  //           List.push({
-  //             title: invoice.title,
-  //             amount: "₹ " + invoice.amount,
-  //             status: invoice.status,
-  //             date: invoice.date,
-  //           });
-  //         });
-
-  //         setInvoiceList(List);
-  //         setTotalInvoices(invoices.length);
-  //         setPaidInvoices(paidInvoicesCount);
-  //         setPendingInvoices(pendingInvoicesCount);
-  //       }
-  //     });
-  // }, []);  // ✅ Removed dependencies to prevent unnecessary re-renders
 
   // const handlePayment = async (invoice) => {
   //   if (!invoice || !invoice.amount) {
@@ -140,24 +181,24 @@ function Invoices() {
       <p className="text-white text-xl text-center px-5 sm:p-0">
         All the invoices like Mess bills, Hostel fee will be shown here
       </p>
-      <div className="flex gap-10 items-center my-5">
-        {/* <div className="flex flex-col items-center justify-center">
+      {/* <div className="flex gap-10 items-center my-5">
+        <div className="flex flex-col items-center justify-center">
           <dt className="mb-2 ml-2 text-5xl font-extrabold text-blue-700">{totalInvoices}</dt>
           <dd className="text-gray-400 text-center">Total Invoices</dd>
-        </div> */}
-        {/* <div className="flex flex-col items-center justify-center">
+        </div>
+        <div className="flex flex-col items-center justify-center">
           <dt className="mb-2 text-5xl font-extrabold text-blue-700">{paidInvoices}</dt>
           <dd className="text-gray-400 ">
             Paid Invoices
           </dd>
-        </div> */}
-        {/* <div className="flex flex-col items-center justify-center">
+        </div>
+        <div className="flex flex-col items-center justify-center">
           <dt className="mb-2 text-5xl font-extrabold text-blue-700">{pendingInvoices}</dt>
           <dd className="text-gray-400">
             Pending Invoices
           </dd>
-        </div> */}
-      </div>
+        </div>
+      </div> */}
 
       <div className="w-full max-w-md p-4 border rounded-lg shadow sm:p-8 bg-neutral-950 border-neutral-900 drop-shadow-xl overflow-y-auto max-h-70">
         <div className="flex items-center justify-between mb-4">
@@ -175,23 +216,16 @@ function Invoices() {
                     <p className="text-sm truncate text-gray-400">{invoice.date}</p>
                   </div>
                   <div className="flex flex-col items-center text-base font-semibold text-white">
-                    ₹{invoice.amount}
+                    {invoice.amount}
                   </div>
-                  {invoice.status.toLowerCase() === "paid" ? (
                     <button
                       className="bg-green-500 text-white px-4 py-2 rounded"
-                      onClick={() => downloadInvoice(invoice)} // ✅ Correct function for downloading
+                      onClick={getCSV} // ✅ Correct function for downloading
+                      target="_blank"
+                      download={true}
                     >
                       Download Invoice
                     </button>
-                  ) : (
-                    <button
-                      className="bg-blue-500 text-white px-4 py-2 rounded"
-                      onClick={() => handlePayment(invoice)} // ✅ Show "Pay Now" only for pending invoices
-                    >
-                      Pay Now
-                    </button>
-                  )}
                 </div>
               </li>
             ))}

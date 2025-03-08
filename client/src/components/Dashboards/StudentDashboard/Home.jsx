@@ -2,20 +2,7 @@ import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 
 const List = () => {
-  const [invoiceList, setInvoiceList] = useState([
-    {
-      title: "Mess bill",
-      date: "20-5-2023",
-      amount: "Rs. 690",
-      status: "pending",
-    },
-    {
-      title: "Mess bill",
-      date: "20-5-2023",
-      amount: "Rs. 690",
-      status: "pending",
-    },
-  ]);
+  const [invoiceList, setInvoiceList] = useState([]);
   useEffect(() => {
     let student = JSON.parse(localStorage.getItem("student"));
     fetch("http://localhost:3000/api/invoice/student", {
@@ -49,7 +36,7 @@ const List = () => {
           setInvoiceList(list);
         }
       });
-  }, [invoiceList.length]);
+  }, []);
 
   return (
     <div className="w-full max-w-md p-4 rounded-lg shadow sm:p-8 bg-neutral-950 drop-shadow-xl overflow-y-auto max-h-70">

@@ -36,16 +36,16 @@ function Invoices() {
         });
       }
     } catch (err) {
-      toast.error(err.message || "An error occurred", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      });
+      // toast.error(err.message || "An error occurred", {
+      //   position: "top-right",
+      //   autoClose: 3000,
+      //   hideProgressBar: false,
+      //   closeOnClick: true,
+      //   pauseOnHover: true,
+      //   draggable: true,
+      //   progress: undefined,
+      //   theme: "dark",
+      // });
     }
     setProgress(100);
   };
@@ -93,7 +93,7 @@ function Invoices() {
       }
     } catch (err) {
       toast.error(
-        err.errors, {
+        err.message, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
