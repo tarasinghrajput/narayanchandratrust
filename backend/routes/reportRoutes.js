@@ -12,10 +12,11 @@ const Suggestion = require('../models/Suggestion');
 router.get('/occupancy', async (req, res) => {
     try {
         const rooms = await Rooms.find().populate('currentOccupants');
-        const totalRooms = 35; // Fixed as per your requirement
+        if (!rooms) throw new Error("No rooms found");
 
+        const totalRooms = 35;
         const occupiedRooms = rooms.filter(room => room.status === 'occupied').length;
-        const totalStudents = rooms.reduce((sum, room) => sum + room.currentOccupants.length, 0);
+        const totalStudents = rooms.reduce((sum, room) => sum + (room.currentOccupants ? room.currentOccupants.length : 0), 0);
         const availableBeds = (totalRooms * 2) - totalStudents;
 
         res.json({
@@ -26,31 +27,34 @@ router.get('/occupancy', async (req, res) => {
             totalStudents,
             availableBeds: availableBeds > 0 ? availableBeds : 0
         });
-
     } catch (error) {
+        console.error("Error in /occupancy:", error); // Log the error
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // Room-wise Occupancy Details
 router.get('/room-details', async (req, res) => {
     try {
-        const rooms = await Rooms.find()
-            .populate('currentOccupants')
-            .sort({ roomNumber: 1 });
+        const rooms = await Rooms.find().populate('currentOccupants').sort({ roomNumber: 1 });
+
+        if (!rooms) throw new Error("No rooms found");
 
         const roomDetails = rooms.map(room => ({
             roomNumber: room.roomNumber,
-            status: room.status,
-            occupants: room.currentOccupants.map(s => s.name),
-            availableBeds: room.capacity - room.currentOccupants.length
+            status: room.status || "unknown",
+            occupants: Array.isArray(room.currentOccupants) ? room.currentOccupants.map(s => s.name) : [],
+            availableBeds: room.capacity - (Array.isArray(room.currentOccupants) ? room.currentOccupants.length : 0)
         }));
 
         res.json(roomDetails);
     } catch (error) {
+        console.error("Error in /room-details:", error);
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // Additional Report: Department-wise Occupancy
 router.get('/department-wise', async (req, res) => {

@@ -22,6 +22,17 @@ const registerStudent = async (req, res) => {
         }
         let shostel = await Hostel.findOne({ name: hostel });
 
+        let room = await Rooms.findOne({ roomNumber: room_no });
+        if (!room) {
+            return res.status(400).json({ success, errors: [{ msg: 'Room does not exist' }] });
+        }
+
+        // Check if the room is available
+        if (room.status === 'occupied' || room.currentOccupants.length >= room.capacity) {
+            return res.status(400).json({ success, errors: [{ msg: 'Room is already occupied' }] });
+        }
+
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -52,6 +63,10 @@ const registerStudent = async (req, res) => {
 
 
         await student.save();
+
+         // Update room occupancy
+         room.currentOccupants.push(student._id);
+         await room.save();
 
         success = true;
         res.json({ success, student });

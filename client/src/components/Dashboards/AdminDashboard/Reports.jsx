@@ -31,9 +31,17 @@ const Reports = () => {
                 const roomRes = await fetch('http://localhost:3000/api/reports/room-details');
                 const deptRes = await fetch('http://localhost:3000/api/reports/department-wise');
 
-                setSummary(await summaryRes.json());
-                setRoomDetails(await roomRes.json());
-                setDeptData(await deptRes.json());
+                if (!summaryRes.ok || !roomRes.ok || !deptRes.ok) {
+                    throw new Error("API response not OK");
+                }
+
+                const summaryData = await summaryRes.json();
+                const roomData = await roomRes.json();
+                const deptData = await deptRes.json();
+
+                setSummary(summaryData);
+                setRoomDetails(Array.isArray(roomData) ? roomData : []); // Ensure it's an array
+                setDeptData(deptData);
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -42,6 +50,7 @@ const Reports = () => {
         };
         fetchData();
     }, []);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -293,23 +302,29 @@ const Reports = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {roomDetails.map((room, index) => (
-                                                <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50">
-                                                    <td className="px-6 py-4 font-medium">#{room.roomNumber}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`px-2 py-1 rounded-full text-xs ${room.status === 'available'
-                                                            ? 'bg-green-800/30 text-green-400'
-                                                            : 'bg-red-800/30 text-red-400'
-                                                            }`}>
-                                                            {room.status.toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-gray-300">
-                                                        {room.occupants.join(', ') || 'No occupants'}
-                                                    </td>
-                                                    <td className="px-6 py-4">{room.availableBeds}</td>
-                                                </tr>
-                                            ))}
+                                            {Array.isArray(roomDetails) && roomDetails.length > 0 ? (
+                                                roomDetails.map((room, index) => (
+                                                    <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50">
+                                                        <td className="px-6 py-4 font-medium">#{room.roomNumber}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2 py-1 rounded-full text-xs ${room.status === 'available'
+                                                                ? 'bg-green-800/30 text-green-400'
+                                                                : 'bg-red-800/30 text-red-400'
+                                                                }`}>
+                                                                {room.status.toUpperCase()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-gray-300">
+                                                            {room.occupants.join(', ') || 'No occupants'}
+                                                        </td>
+                                                        <td className="px-6 py-4">{room.availableBeds}</td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <div>
+                                                    <p>No rooms available</p>
+                                                </div>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -358,7 +373,7 @@ const Reports = () => {
                                     )}
                                 </div>
                             </div>
-                            
+
                             {/* Payment History */}
                             <div className="bg-gray-800 p-6 rounded-xl shadow-xl">
                                 <h2 className="text-xl font-bold mb-4 text-blue-400">Payment History</h2>
@@ -368,7 +383,6 @@ const Reports = () => {
                                             <tr className="border-b border-gray-700">
                                                 <th className="px-4 py-2 text-left text-sm text-gray-400">Date</th>
                                                 <th className="px-4 py-2 text-left text-sm text-gray-400">Amount</th>
-                                                <th className="px-4 py-2 text-left text-sm text-gray-400">Invoice</th>
                                                 <th className="px-4 py-2 text-left text-sm text-gray-400">Status</th>
                                             </tr>
                                         </thead>
@@ -379,7 +393,6 @@ const Reports = () => {
                                                         {new Date(payment.date).toLocaleDateString()}
                                                     </td>
                                                     <td className="px-4 py-2">₹{payment.amount}</td>
-                                                    <td className="px-4 py-2 text-gray-300">{payment.invoice?.title}</td>
                                                     <td className="px-4 py-2">
                                                         <span className={`px-2 py-1 rounded-full text-xs ${payment.paymentStatus === 'paid'
                                                             ? 'bg-green-800/30 text-green-400'

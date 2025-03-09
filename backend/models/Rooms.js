@@ -32,13 +32,12 @@ roomSchema.pre('save', function (next) {
 roomSchema.pre('findOneAndUpdate', async function (next) {
     const update = this.getUpdate();
     if (update.currentOccupants) {
-        const newOccupants = update.currentOccupants;
         const room = await this.model.findOne(this.getQuery());
-        const totalOccupants = newOccupants.length || room.currentOccupants.length;
-
-        update.status = totalOccupants >= room.capacity ? 'occupied' : 'available';
+        const newOccupants = update.currentOccupants.length || room.currentOccupants.length;
+        this.set({ status: newOccupants >= room.capacity ? 'occupied' : 'available' });
     }
     next();
 });
+
 
 module.exports = Rooms = mongoose.models.rooms || mongoose.model("rooms", roomSchema);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "./Input";
 import { Button } from "../Common/PrimaryButton";
 import { Loader } from "../Common/Loader";
@@ -6,6 +6,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function RegisterStudent() {
+
+  const [allRooms, setAllRooms] = useState([]);
+  const [availableRooms, setAvailableRooms] = useState([]);
+  const [roomNo, setRoomNoUseState] = useState("");
+
   const registerStudent = async (e) => {
     e.preventDefault();
     try {
@@ -36,21 +41,6 @@ function RegisterStudent() {
       })
       const data = await res.json();
       // console.log("Response:", data); 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       if (data.success) {
         toast.success(
@@ -106,6 +96,24 @@ function RegisterStudent() {
       setLoading(false);
     }
   };
+
+  const fetchRooms = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/api/rooms");
+      const data = await res.json();
+      console.log("All Rooms Data:", data);
+
+      // Set all rooms from API
+      setAllRooms(data || []);
+
+      // Filter only available rooms in the frontend
+      const filteredRooms = data.filter(room => room.status === "available");
+      setAvailableRooms(filteredRooms);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+    }
+  };
+
 
 
 
@@ -191,14 +199,14 @@ function RegisterStudent() {
     setContact(value);
   };
 
-  const validateAddress = (value) => {
-    if (!/^[A-Za-z0-9,.\s]+$/.test(value)) {
-      setErrors((prev) => ({ ...prev, address: "Address can only contain letters, numbers, and commas." }));
-    } else {
-      setErrors((prev) => ({ ...prev, address: "" }));
-    }
-    setAddress(value);
-  };
+  // const validateAddress = (value) => {
+  //   if (!/^[A-Za-z0-9,.\s]+$/.test(value)) {
+  //     setErrors((prev) => ({ ...prev, address: "Address can only contain letters, numbers, and commas." }));
+  //   } else {
+  //     setErrors((prev) => ({ ...prev, address: "" }));
+  //   }
+  //   setAddress(value);
+  // };
 
   const validateDob = (value) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -227,7 +235,9 @@ function RegisterStudent() {
     setPassword(value);
   };
 
-
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
 
   const hostel = JSON.parse(localStorage.getItem("hostel")).name;
@@ -380,19 +390,35 @@ function RegisterStudent() {
             </div>
           </div>
           <div className="flex flex-wrap gap-5 w-full justify-center">
-            <div className="flex flex-col">
-              <Input
-                field={{
-                  name: "room",
-                  placeholder: "Student Room",
-                  type: "number",
-                  req: true,
-                  value: room_no || "",
-                  onChange: (e) => validateRoomNo(e.target.value),
-                }}
-              />
-              {errors.room_no && <p style={{ color: "red", fontSize: "10px" }}>{errors.room_no}</p>}
+            <div className="flex flex-col w-25">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                Select Room
+              </label>
+              <select
+                name="room"
+                value={roomNo || ""}
+                onChange={(e) => setRoomNo(e.target.value)}
+                required
+                className="px-4 py-2 border rounded-md shadow-sm focus:ring focus:ring-indigo-300 transition-all bg-white text-gray-700 border-gray-300"
+              >
+                <option value="" disabled>
+                  Select a Room
+                </option>
+                {availableRooms.length > 0 ? (
+                  availableRooms.map((room) => (
+                    <option key={room._id} value={room.roomNumber}>
+                      {room.roomNumber} (Capacity: {room.capacity - room.currentOccupants.length} left)
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>No available rooms</option>
+                )}
+              </select>
+              {errors.room_no && (
+                <p className="text-red-500 text-xs mt-1">{errors.room_no}</p>
+              )}
             </div>
+
 
             <div className="flex flex-col">
               <Input
