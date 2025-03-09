@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { BarChart, Bar, PieChart, Pie, Cell, Tooltip, Legend, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Card, Table, Badge } from 'antd';
+import ReportModal from "./ReportModal";
 
 const Reports = () => {
     const [summary, setSummary] = useState(null);
@@ -16,6 +17,7 @@ const Reports = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [filteredRevenue, setFilteredRevenue] = useState([]);
+    const [selectedInvoice, setSelectedInvoice] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -54,9 +56,10 @@ const Reports = () => {
     }, []);
 
     useEffect(() => {
+        let studentId = JSON.parse(localStorage.getItem("student"))._id;
         const fetchData = async () => {
             try {
-                const res = await fetch(`/api/financial/student-payments/${studentId}`);
+                const res = await fetch(`http://localhost:3000/api/reports/student-payments/${studentId}`);
                 setPayments(await res.json());
             } finally {
                 setLoading(false);
@@ -311,10 +314,25 @@ const Reports = () => {
                                                     <td className="p-2 text-red-400">
                                                         {Math.floor((new Date() - new Date(invoice.date)) / (1000 * 3600 * 24))}
                                                     </td>
+                                                    <td className="p-2">
+                                                        <button
+                                                            onClick={() => setSelectedInvoice(invoice)}
+                                                            className="text-indigo-400 hover:text-indigo-300"
+                                                        >
+                                                            View Details
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             ))}
+
                                         </tbody>
                                     </table>
+                                            {selectedInvoice && (
+                                                <ReportModal
+                                                    closeModal={() => setSelectedInvoice(null)}
+                                                    suggestion={selectedInvoice} // We'll modify the Modal to work with invoices
+                                                />
+                                            )}
                                 </div>
                             </div>
                         </div>

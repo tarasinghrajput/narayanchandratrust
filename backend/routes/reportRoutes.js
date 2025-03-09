@@ -144,8 +144,7 @@ router.get('/student-payments/:studentId', async (req, res) => {
     try {
         const payments = await Payments.find({
             student: req.params.studentId
-        })
-            .populate('invoice')
+        }).populate('invoice')
             .sort({ date: -1 });
 
         res.json(payments);
