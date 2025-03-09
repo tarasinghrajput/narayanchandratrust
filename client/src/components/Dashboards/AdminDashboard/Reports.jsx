@@ -18,6 +18,11 @@ const Reports = () => {
     const [endDate, setEndDate] = useState('');
     const [filteredRevenue, setFilteredRevenue] = useState([]);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [complaintStats, setComplaintStats] = useState([]);
+    const [commonComplaints, setCommonComplaints] = useState([]);
+    const [maintenanceStatus, setMaintenanceStatus] = useState([]);
+    const [suggestions, setSuggestions] = useState([]);
+    const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -68,6 +73,24 @@ const Reports = () => {
         fetchData();
     }, [studentId]);
 
+    useEffect(() => {
+        const fetchData = async () => {
+            const queries = new URLSearchParams(dateFilter);
+            const [statsRes, commonRes, maintenanceRes, suggestionsRes] = await Promise.all([
+                fetch(`http://localhost:3000/api/reports/complaint-stats?${queries}`),
+                fetch(`http://localhost:3000/api/reports/common-complaints?${queries}`),
+                fetch(`http://localhost:3000/api/reports/maintenance-status?${queries}`),
+                fetch(`http://localhost:3000/api/reports/pending-suggestions?${queries}`)
+            ]);
+
+            setComplaintStats(await statsRes.json());
+            setCommonComplaints(await commonRes.json());
+            setMaintenanceStatus(await maintenanceRes.json());
+            setSuggestions(await suggestionsRes.json());
+        };
+        fetchData();
+    }, [dateFilter]);
+
 
     // Add this fetch function
     const fetchFilteredRevenue = async () => {
@@ -90,7 +113,7 @@ const Reports = () => {
     }
 
     // Color scheme for charts
-    // const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+    const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
 
     return (
         <div className="px-4 py-20 max-w-7xl mx-auto space-y-8 bg-gray-900 text-white h-screen overflow-y-auto">
@@ -106,7 +129,7 @@ const Reports = () => {
                 ];
 
                 return (
-                    <>
+                    <div>
                         {/* Summary Section */}
                         <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                             {/* Monthly Collections */}
@@ -327,52 +350,133 @@ const Reports = () => {
 
                                         </tbody>
                                     </table>
-                                            {selectedInvoice && (
-                                                <ReportModal
-                                                    closeModal={() => setSelectedInvoice(null)}
-                                                    suggestion={selectedInvoice} // We'll modify the Modal to work with invoices
-                                                />
-                                            )}
+                                    {selectedInvoice && (
+                                        <ReportModal
+                                            closeModal={() => setSelectedInvoice(null)}
+                                            suggestion={selectedInvoice} // We'll modify the Modal to work with invoices
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                            
+                            {/* Payment History */}
+                            <div className="bg-gray-800 p-6 rounded-xl shadow-xl">
+                                <h2 className="text-xl font-bold mb-4 text-blue-400">Payment History</h2>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full">
+                                        <thead>
+                                            <tr className="border-b border-gray-700">
+                                                <th className="px-4 py-2 text-left text-sm text-gray-400">Date</th>
+                                                <th className="px-4 py-2 text-left text-sm text-gray-400">Amount</th>
+                                                <th className="px-4 py-2 text-left text-sm text-gray-400">Invoice</th>
+                                                <th className="px-4 py-2 text-left text-sm text-gray-400">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {payments.map(payment => (
+                                                <tr key={payment._id} className="border-b border-gray-700 hover:bg-gray-700/50">
+                                                    <td className="px-4 py-2 text-gray-300">
+                                                        {new Date(payment.date).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-4 py-2">₹{payment.amount}</td>
+                                                    <td className="px-4 py-2 text-gray-300">{payment.invoice?.title}</td>
+                                                    <td className="px-4 py-2">
+                                                        <span className={`px-2 py-1 rounded-full text-xs ${payment.paymentStatus === 'paid'
+                                                            ? 'bg-green-800/30 text-green-400'
+                                                            : 'bg-yellow-800/30 text-yellow-400'
+                                                            }`}>
+                                                            {payment.paymentStatus}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Payment History */}
-                        <div className="bg-gray-800 p-6 rounded-xl shadow-xl">
-                            <h2 className="text-xl font-bold mb-4 text-blue-400">Payment History</h2>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full">
-                                    <thead>
-                                        <tr className="border-b border-gray-700">
-                                            <th className="px-4 py-2 text-left text-sm text-gray-400">Date</th>
-                                            <th className="px-4 py-2 text-left text-sm text-gray-400">Amount</th>
-                                            <th className="px-4 py-2 text-left text-sm text-gray-400">Invoice</th>
-                                            <th className="px-4 py-2 text-left text-sm text-gray-400">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {payments.map(payment => (
-                                            <tr key={payment._id} className="border-b border-gray-700 hover:bg-gray-700/50">
-                                                <td className="px-4 py-2 text-gray-300">
-                                                    {new Date(payment.date).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-4 py-2">₹{payment.amount}</td>
-                                                <td className="px-4 py-2 text-gray-300">{payment.invoice?.title}</td>
-                                                <td className="px-4 py-2">
-                                                    <span className={`px-2 py-1 rounded-full text-xs ${payment.paymentStatus === 'paid'
-                                                        ? 'bg-green-800/30 text-green-400'
-                                                        : 'bg-yellow-800/30 text-yellow-400'
-                                                        }`}>
-                                                        {payment.paymentStatus}
-                                                    </span>
-                                                </td>
-                                            </tr>
+                        <div className='space-y-8'>
+                            <div className="p-6 bg-gray-900 text-gray-100 space-y-8">
+                                {/* Filters */}
+                                <div className="flex gap-4">
+                                    <input
+                                        type="date"
+                                        className="bg-gray-700 text-white px-3 py-2 rounded"
+                                        onChange={e => setDateFilter({ ...dateFilter, start: e.target.value })}
+                                    />
+                                    <input
+                                        type="date"
+                                        className="bg-gray-700 text-white px-3 py-2 rounded"
+                                        onChange={e => setDateFilter({ ...dateFilter, end: e.target.value })}
+                                    />
+                                </div>
+
+                                {/* Complaint Statistics */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-gray-800 p-6 rounded-xl">
+                                        <h3 className="text-xl font-bold mb-4">Complaint Status</h3>
+                                        <PieChart width={400} height={300}>
+                                            <Pie
+                                                data={complaintStats}
+                                                dataKey="count"
+                                                nameKey="status"
+                                                cx="50%"
+                                                cy="50%"
+                                                outerRadius={80}
+                                                label
+                                            >
+                                                {complaintStats.map((entry, index) => (
+                                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                            <Legend />
+                                        </PieChart>
+                                    </div>
+
+                                    <div className="bg-gray-800 p-6 rounded-xl">
+                                        <h3 className="text-xl font-bold mb-4">Common Complaint Types</h3>
+                                        <BarChart width={400} height={300} data={commonComplaints}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="_id" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Bar dataKey="count" fill="#4BC0C0" />
+                                        </BarChart>
+                                    </div>
+                                </div>
+
+                                {/* Maintenance Status */}
+                                <div className="bg-gray-800 p-6 rounded-xl">
+                                    <h3 className="text-xl font-bold mb-4">Maintenance Requests</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {maintenanceStatus.map((status, index) => (
+                                            <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                                                <p className="text-sm text-gray-400">{status._id}</p>
+                                                <p className="text-2xl font-bold">{status.count}</p>
+                                            </div>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                </div>
+
+                                {/* Pending Suggestions */}
+                                <div className="bg-gray-800 p-6 rounded-xl">
+                                    <h3 className="text-xl font-bold mb-4">Pending Suggestions</h3>
+                                    <div className="space-y-4">
+                                        {suggestions.map(suggestion => (
+                                            <div key={suggestion._id} className="bg-gray-700 p-4 rounded-lg">
+                                                <h4 className="font-semibold">{suggestion.title}</h4>
+                                                <p className="text-gray-400 text-sm">{suggestion.description}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </>
+                    </div>
+
+
                 );
             })()}
         </div>

@@ -3,6 +3,9 @@ const Rooms = require('../models/Rooms');
 const Student = require('../models/Student');
 const Invoice = require('../models/Invoice');
 const Payments = require('../models/Payments');
+const Complaint = require('../models/Complaint');
+const Maintenance = require('../models/Maintenance');
+const Suggestion = require('../models/Suggestion');
 // const { verifySession, isAdmin } = require('../utils/auth');
 
 // Occupancy Summary
@@ -207,6 +210,77 @@ router.get('/filtered-revenue', async (req, res) => {
 });
 
 
+// Complaint Statistics
+router.get('/complaint-stats', async (req, res) => {
+    try {
+        const stats = await Complaint.aggregate([
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 },
+                    avgResolution: {
+                        $avg: {
+                            $cond: [
+                                { $eq: ["$status", "resolved"] },
+                                { $subtract: [new Date(), "$date"] },
+                                null
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    status: "$_id",
+                    count: 1,
+                    avgResolutionHours: { $divide: ["$avgResolution", 1000 * 60 * 60] },
+                    _id: 0
+                }
+            }
+        ]);
 
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Frequent Complaint Types
+router.get('/common-complaints', async (req, res) => {
+    try {
+        const types = await Complaint.aggregate([
+            { $group: { _id: "$type", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+        res.json(types);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Maintenance Status
+router.get('/maintenance-status', async (req, res) => {
+    try {
+        const status = await Maintenance.aggregate([
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+        res.json(status);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Pending Suggestions
+router.get('/pending-suggestions', async (req, res) => {
+    try {
+        const suggestions = await Suggestion.find({ status: "pending" })
+            .populate('student')
+            .sort({ date: -1 });
+        res.json(suggestions);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 module.exports = router;

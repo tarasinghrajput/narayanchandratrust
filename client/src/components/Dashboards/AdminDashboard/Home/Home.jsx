@@ -26,10 +26,10 @@ function Home() {
       try {
         const response = await fetch("http://localhost:3000/api/hostel");
         const data = await response.json();
-        
+
         if (data.success) {
           setHostel(data.hostel);
-  
+
           // Save to localStorage
           localStorage.setItem("hostel", JSON.stringify(data.hostel));
         } else {
@@ -39,7 +39,7 @@ function Home() {
         console.error("Error fetching hostel data:", error);
       }
     }
-    
+
     fetchHostel();
   }, []);
 
@@ -131,15 +131,15 @@ function Home() {
   function transformApiData(apiData) {
     // Extract complaints from the API data
     const complaintss = apiData || [];
-  
+
     // Create a Map to store complaints grouped by date
     const complaintMap = new Map();
-  
+
     // Process each complaint
     complaintss.forEach(complaint => {
       // Parse the date string
       const date = new Date(complaint.date);
-      
+
       const formattedDate = date.toLocaleDateString('en-US', {
         timeZone: 'UTC',
         year: 'numeric',
@@ -150,13 +150,13 @@ function Home() {
       // Increment the count for this date
       complaintMap.set(formattedDate, (complaintMap.get(formattedDate) || 0) + 1);
     });
-  
+
     // Convert the Map to an array of objects
     const transformedData = Array.from(complaintMap.entries()).map(([date, count]) => ({
       name: date,
       DailyComplaints: count
     }));
-  
+
     return transformedData;
   }
 
@@ -209,7 +209,7 @@ function Home() {
       width="100%"
       height="85%"
       className={
-        "bg-neutral-950 px-7 py-5 rounded-xl shadow-xl w-full max-w-[350px] max-h-96"
+        "bg-neutral-950 px-7 py-5 rounded-xl shadow-xl w-full max-h-96"
       }
     >
       <AreaChart
@@ -253,10 +253,16 @@ function Home() {
         <ShortCard title="Total Complaints" number={complaints.length} />
         <ShortCard title="Total Suggestions" number={suggestions.length} />
       </div>
-      <div className="w-full flex gap-5 sm:px-20 h-80 flex-wrap items-center justify-center">
-        <List list={messReqs} title="mess" icon={messIcon} />
-        {graph}
-        <List list={suggestions} title="suggestions" icon={suggestionIcon} />
+      <div className="w-full grid grid-cols-3 gap-5 sm:px-20 h-80 items-center justify-center">
+        {/* <List list={messReqs} title="mess" icon={messIcon} /> */}
+        {/* Graph takes 2 columns out of 3 */}
+        <div className="col-span-2 h-full">
+          {graph}
+        </div>
+        {/* Suggestions take 1 column */}
+        <div className="col-span-1 h-full">
+          <List list={suggestions} title="suggestions" icon={suggestionIcon} />
+        </div>
       </div>
     </div>
   );
