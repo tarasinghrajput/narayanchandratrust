@@ -30,10 +30,10 @@ function Topbar({ name, notifications }) {
   }, []);
 
   return (
-    <div className="py-5 px-5 flex items-center justify-between text-white w-full bg-stone-950 shadow-lg absolute top-0 md:w-[calc(100%-256px)] md:ml-[256px]">
+    <div className="z-999 py-5 px-5 flex items-center justify-between text-white w-full bg-black shadow-lg absolute top-0 md:w-[calc(100%-256px)] md:ml-[256px]">
       <span className="hidden md:block">
         {date.toLocaleTimeString()}
-      </span>    
+      </span>
       <span>{name}</span>
       <div className="flex gap-3">
         <Link to="settings">
@@ -56,6 +56,28 @@ function Topbar({ name, notifications }) {
               d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
+        </Link>
+        <Link to="reports">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-6 h-6 hover:text-blue-500"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 2.25h9l6 6v13.5a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V3a.75.75 0 01.75-.75z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.25 2.25V9h6M8.25 12h7.5M8.25 16.5h4.5"
+            />
+          </svg>
+
         </Link>
         <div className="relative group cursor-pointer">
           {/* <svg

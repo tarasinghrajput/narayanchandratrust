@@ -41,5 +41,4 @@ roomSchema.pre('findOneAndUpdate', async function (next) {
     next();
 });
 
-const Rooms = mongoose.model("rooms", roomSchema);
-module.exports = Rooms;
+module.exports = Rooms = mongoose.models.rooms || mongoose.model("rooms", roomSchema);

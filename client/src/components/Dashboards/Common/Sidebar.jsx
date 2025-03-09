@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import "../../../App.css"
 
 // Sidebar.propTypes = {
 //   links: PropTypes.shape({

@@ -28,6 +28,7 @@ import AdminSettings from './components/Dashboards/AdminDashboard/Settings'
 import AllStudents from "./components/Dashboards/AdminDashboard/AllStudents";
 import AdminMess from "./components/Dashboards/AdminDashboard/Maintenance";
 import RoomsStatus from "./components/RoomsStatus";
+import Reports from "./components/Dashboards/AdminDashboard/Reports"
 
 function App() {
   return (
@@ -65,6 +66,7 @@ function App() {
           <Route path="settings" element={<AdminSettings/>} />
           <Route path="all-students" element={<AllStudents/>}/>
           <Route path="mess" element={<AdminMess />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
       </Routes>
     </>

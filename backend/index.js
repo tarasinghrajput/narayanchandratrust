@@ -26,6 +26,7 @@ app.use('/api/request', require('./routes/requestRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/suggestion', require('./routes/suggestionRoutes'));
 app.use('/api/rooms', require('./routes/roomsRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
 
 app.listen(port, () => {
   console.log(`NCT backend listening on port ${port}`)
