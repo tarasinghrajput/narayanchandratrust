@@ -10,9 +10,11 @@ const { storePayment } = require("../controllers/paymentController");
 router.post("/create-session", createSession);
 // router.post("/stripe-webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
 router.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+
 router.post("/student", [
-    check("studentId", "Student ID is required").not().isEmpty(),
+    check("student", "Student ID is required").not().isEmpty(),
 ], getPaymentsByStudent);
+
 router.post("/store-payment", storePayment);
 
 module.exports = router;

@@ -5,7 +5,7 @@ const { Invoice, Maintenance, Student } = require('../models');
 const { Mess_bill_per_day } = require('../constants/mess');
 // const sendEmail = require("../utils/emailService");
 const nodemailer = require("nodemailer");
-const Payment = require("../models/Payment");
+const Payments = require("../models/Payments");
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
@@ -26,7 +26,7 @@ exports.confirmPayment = async (req, res) => {
         }
 
         // Find existing payment first (DO NOT upsert here)
-        let payment = await Payment.findOne({ stripeSessionId: session_id }).populate("student invoice");
+        let payment = await Payments.findOne({ stripeSessionId: session_id }).populate("student invoice");
 
         if (!payment) {
             console.log("⚠️ Payment not found in DB. Creating new record...");
@@ -42,7 +42,7 @@ exports.confirmPayment = async (req, res) => {
             }
 
             // ✅ Create a new Payment entry
-            payment = new Payment({
+            payment = new Payments({
                 student: invoice.student,
                 invoice: invoice._id,
                 amount: session.amount_total / 100,

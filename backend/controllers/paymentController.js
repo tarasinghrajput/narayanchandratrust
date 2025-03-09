@@ -3,8 +3,8 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { validationResult } = require("express-validator");
 const Invoice = require("../models/Invoice"); // ✅ Ensure you import Invoice model
 const Student = require("../models/Student"); // ✅ Ensure you import Student model
-const Payment = require("../models/Payment");
-const nodemailer = require("nodemailer");
+const Payments = require("../models/Payments");
+// const nodemailer = require("nodemailer");*
 
 
 
@@ -15,10 +15,10 @@ exports.getPaymentsByStudent = async (req, res) => {
         return res.status(400).json({ success, errors: errors.array() });
     }
 
-    const { studentId } = req.body;
+    const { student } = req.body;
     try {
-        console.log("📩 Fetching payments for student ID:", studentId);
-        const payments = await Payment.find({ student: studentId });
+        // console.log("📩 Fetching payments for student ID:", student);
+        const payments = await Payments.find({ student: student });
 
         success = true;
         res.status(200).json({ success, payments });
@@ -31,9 +31,8 @@ exports.getPaymentsByStudent = async (req, res) => {
 
 exports.createSession = async (req, res) => {
     try {
-        console.log("📩 Received payment request:", req.body);
 
-        const { studentId, amount } = req.body;
+        const { studentId, amount, payment } = req.body;
 
         if (!studentId || !amount) {
             return res.status(400).json({ success: false, message: "Missing studentId or amount." });
@@ -44,17 +43,14 @@ exports.createSession = async (req, res) => {
             return res.status(404).json({ success: false, message: "Student not found." });
         }
 
-        const invoice = await Invoice.findOne({ student: studentId, status: "pending" });
+        const invoice = await Invoice.findOne({ student: student._id, status: "pending" });
         if (!invoice) {
             return res.status(400).json({ success: false, message: "Invoice already paid or not found." });
         }
 
-        console.log("🔍 Invoice found:", invoice);
-
         // ✅ FIX: Don't use session.id before it's assigned
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
-            mode: "payment",
             line_items: [
                 {
                     price_data: {
@@ -65,14 +61,14 @@ exports.createSession = async (req, res) => {
                     quantity: 1,
                 },
             ],
-            metadata: {
-                studentId: student._id // ✅ Ensure student ID is stored
-            },
+            mode: "payment",
             billing_address_collection: "required",
             shipping_address_collection: { allowed_countries: ["IN"] },
-            success_url: `http://localhost:5173/student-dashboard/invoices?success=true&session_id={CHECKOUT_SESSION_ID}`,
+            success_url: `http://localhost:5173/student-dashboard/invoices?success=true&session_id=SESSION_ID_PLACEHOLDER`,
             cancel_url: "http://localhost:5173/student-dashboard/invoices?canceled=true",
         });
+
+        session.success_url = `http://localhost:5173/student-dashboard/invoices?success=true&session_id=${session.id}`;
 
         console.log("✅ Stripe Checkout Session Created:", session);
         res.json({ success: true, sessionUrl: session.url });
@@ -84,70 +80,78 @@ exports.createSession = async (req, res) => {
 };
 
 
-// exports.handleStripeWebhook = async (req, res) => {
-//     let event;
+exports.handleStripeWebhook = async (req, res) => {
+    let event;
 
-//     try {
-//         const rawBody = req.rawBody;
-//         const sig = req.headers["stripe-signature"];
-//         event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
-//     } catch (err) {
-//         console.error("❌ Stripe Webhook Signature Verification Failed:", err.message);
-//         return res.status(400).send(`Webhook Error: ${err.message}`);
-//     }
+    try {
+        const rawBody = req.rawBody;
+        const sig = req.headers["stripe-signature"];
+        event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.error("❌ Stripe Webhook Signature Verification Failed:", err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
 
-//     // ✅ Handle Payment Success
-//     if (event.type === "checkout.session.completed") {
-//         const session = event.data.object;
-//         const studentEmail = session.customer_email;
+    // ✅ Handle Payment Success
+    if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+        const studentEmail = session.customer_email;
 
-//         console.log("✅ Payment Successful for:", studentEmail);
+        console.log("✅ Payment Successful for:", studentEmail);
 
-//         // ✅ Find student & update invoice
-//         const student = await Student.findOne({ email: studentEmail });
-//         if (student) {
-//             await Invoice.findOneAndUpdate(
-//                 { student: student._id, status: "pending" },
-//                 { status: "paid" }
-//             );
-//             console.log("✅ Invoice updated to PAID");
-//         }
-//     }
+        // ✅ Find student & update invoice
+        const student = await Student.findOne({ email: studentEmail });
+        const invoice = await Invoice.findOne({ student: student._id });
+        if (student) {
+            await Invoice.findOneAndUpdate(
+                { student: student._id, status: "pending" },
+                { status: "paid" }
+            );
+            await Payments.findOneAndUpdate(
+                { invoice: invoice._id },
+                { paymentStatus: "completed", paymentId: session.payment_intent }
+            );
+            console.log("✅ Invoice updated to PAID");
+        }
+    }
 
-//     res.status(200).send("Webhook received.");
-// };
+    res.status(200).send("Webhook received.");
+};
 
 exports.stripeWebhook = async (req, res) => {
     const sig = req.headers["stripe-signature"];
-  
+
     try {
         const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  
+
         if (event.type === "checkout.session.completed") {
             const session = event.data.object;
             const studentEmail = session.customer_email;
-  
+
             // ✅ Find the Invoice & Mark as Paid
-            const invoice = await Invoice.findOne({ studentEmail, status: "pending" });
+            const student = await Student.findOne({ email: studentEmail });
+            const invoice = await Invoice.findOne({ student: student._id, status: "pending" });
 
             if (invoice) {
                 invoice.status = "paid";
+                invoice.date = new Date();
                 await invoice.save();
-
-                // ✅ Store Payment in Payments Collection
-                const newPayment = new Payment({
-                    student: invoice.student,
-                    invoice: invoice._id,
-                    amount: invoice.amount,
-                    paymentMethod: "Stripe",
-                    paymentStatus: "Completed",
-                    date: new Date(),
-                });
-
-                await newPayment.save();
             }
+
+            // ✅ Store Payment in Payments Collection
+            const newPayment = new Payments({
+                student: student._id,
+                invoice: invoice?._id || null,
+                amount: session.amount_total / 100,
+                stripeSessionId: session.id,
+                paymentMethod: "Stripe",
+                paymentStatus: "completed",
+                date: new Date(),
+            });
+
+            await newPayment.save();
         }
-  
+
         res.json({ received: true });
     } catch (err) {
         console.error("❌ Webhook Error:", err.message);
@@ -157,12 +161,16 @@ exports.stripeWebhook = async (req, res) => {
 
 
 exports.storePayment = async (req, res) => {
-    const { studentId, amount, status } = req.body;
-  
+    const { studentId, amount, status, paymentId } = req.body;
+
+    const invoice = await Invoice.findOne({ Student: studentId })
+
     try {
-        const newPayment = new Payment({
+        const newPayment = new Payments({
             student: studentId,
+            invoice: invoice._id,
             amount: amount,
+            paymentId: paymentId,
             paymentStatus: status,
             date: new Date(),
         });
@@ -180,7 +188,7 @@ exports.storePayment = async (req, res) => {
 
 //     try {
 //         // ✅ Step 1: Find and update the payment to "Completed"
-//         const payment = await Payment.findById(paymentId);
+//         const payment = await Payments.findById(paymentId);
 //         if (!payment || payment.paymentStatus !== "pending") {
 //             return res.status(400).json({ success: false, message: "Invalid or already processed payment." });
 //         }
@@ -190,8 +198,8 @@ exports.storePayment = async (req, res) => {
 
 //         // ✅ Step 2: Find the invoice and mark it as "paid"
 //         const invoice = await Invoice.findOneAndUpdate(
-//             { student: studentId, title: payment.title }, 
-//             { $set: { status: "paid" } }, 
+//             { student: studentId, title: payment.title },
+//             { $set: { status: "paid" } },
 //             { new: true } // ✅ Returns the updated document
 //         );
 

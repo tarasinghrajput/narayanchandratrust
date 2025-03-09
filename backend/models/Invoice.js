@@ -32,6 +32,7 @@ const mongoose = require("mongoose");
 const InvoiceSchema = new mongoose.Schema({
     student: { type: mongoose.Schema.Types.ObjectId, ref: "student", required: true },
     title: { type: String, required: true },
+    paymentMethod: { type: String, default: "Stripe" },
     amount: { type: Number, required: true },
     status: { type: String, enum: ["pending", "paid", "approved", "declined"], default: "pending" },
     date: { type: Date, default: Date.now }
