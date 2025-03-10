@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { BarChart, Bar, PieChart, Pie, Cell, Tooltip, Legend, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Card, Table, Badge } from 'antd';
+// import { Bar, PieChart, Pie, Cell, Tooltip, Legend, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { Table } from 'antd';
 import ReportModal from "./ReportModal";
+import jsPDF from "jspdf";  // Import jsPDF
+import "jspdf-autotable";   // Import AutoTable plugin (this must be present)
 
 const Reports = () => {
     const [summary, setSummary] = useState(null);
@@ -118,12 +120,77 @@ const Reports = () => {
     };
 
 
+    const handleDownloadPDF = () => {
+        try {
+            const doc = new jsPDF();
+            console.log("autoTable exists:", typeof doc.autoTable); // Should print "function"
+            const date = new Date().toLocaleDateString();
+
+            // Title
+            doc.setFontSize(18);
+            doc.text("Department-wise Student Distribution Report", 14, 22);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated on: ${date}`, 14, 28);
+
+            if (typeof doc.autoTable !== "function") {
+                throw new Error("autoTable function is not available. Ensure 'jspdf-autotable' is imported correctly.");
+            }
+
+            // Student Details Tables
+            deptData.forEach((dept, index) => {
+                if (index > 0) doc.addPage();
+
+                doc.setFontSize(12);
+                doc.text(`Department: ${dept._id} Details`, 14, 25);
+
+                doc.autoTable({
+                    startY: 35,
+                    head: [['CMS ID', 'Name', 'Batch', 'Room', 'Email', 'Contact']],
+                    body: dept.students.map(student => [
+                        student.cms_id,
+                        student.name,
+                        `Batch ${student.batch}`,
+                        `#${student.room_no}`,
+                        student.email,
+                        student.contact
+                    ]),
+                    theme: 'grid',
+                    headStyles: { fillColor: [52, 73, 94], textColor: 255 },
+                    pageBreak: 'auto'
+                });
+            });
+
+            // Main Table
+            doc.autoTable({
+                startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 35, // Avoid overlap
+                head: [['Department', 'Students', 'Percentage']],
+                body: deptData.map(dept => [
+                    dept._id,
+                    dept.students.length, // Ensure it's a number, not an object
+                    `${(dept.students.length)/100}%`
+                ]),
+                theme: 'grid',
+                headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+                alternateRowStyles: { fillColor: [245, 245, 245] }
+            });
+
+            doc.save(`department-report-${date}.pdf`);
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+            alert("Failed to generate PDF. Please check the console for details.");
+        }
+    };
+
+
+
+
     if (loading) {
         return <div className="p-6 text-center">Loading reports...</div>;
     }
 
     // Color scheme for charts
-    const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+    // const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
 
     return (
         <div className="px-4 py-20 max-w-7xl mx-auto space-y-8 bg-gray-900 text-white h-screen overflow-y-auto">
@@ -244,9 +311,20 @@ const Reports = () => {
 
                             {/* Department-wise Distribution Table with Student Details */}
                             <div className="bg-gray-800 p-6 rounded-xl shadow-xl">
-                                <h3 className="text-lg font-semibold mb-4 text-purple-400">
-                                    Department-wise Distribution
-                                </h3>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-semibold text-purple-400">
+                                        Department-wise Distribution
+                                    </h3>
+                                    <button
+                                        onClick={handleDownloadPDF}
+                                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                        Download Report
+                                    </button>
+                                </div>
 
                                 <Table
                                     dataSource={deptData}
