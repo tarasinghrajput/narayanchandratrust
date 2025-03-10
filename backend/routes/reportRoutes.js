@@ -57,6 +57,7 @@ router.get('/room-details', async (req, res) => {
 
 
 // Additional Report: Department-wise Occupancy
+// Updated aggregation in your backend API
 router.get('/department-wise', async (req, res) => {
     try {
         const students = await Student.aggregate([
@@ -64,7 +65,16 @@ router.get('/department-wise', async (req, res) => {
                 $group: {
                     _id: "$dept",
                     count: { $sum: 1 },
-                    students: { $push: "$name" }
+                    students: { 
+                        $push: {
+                            name: "$name",
+                            cms_id: "$cms_id",
+                            batch: "$batch",
+                            room_no: "$room_no",
+                            email: "$email",
+                            contact: "$contact"
+                        }
+                    }
                 }
             },
             { $sort: { count: -1 } }

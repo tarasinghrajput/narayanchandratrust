@@ -1,6 +1,6 @@
 const { generateToken, verifyToken } = require('../utils/auth');
 const { validationResult } = require('express-validator');
-const { Student, Hostel, User } = require('../models');
+const { Student, Hostel, User, Rooms } = require('../models');
 const bcrypt = require('bcryptjs');
 const Parser = require('json2csv').Parser;
 

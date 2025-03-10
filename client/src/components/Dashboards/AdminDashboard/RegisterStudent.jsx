@@ -9,7 +9,6 @@ function RegisterStudent() {
 
   const [allRooms, setAllRooms] = useState([]);
   const [availableRooms, setAvailableRooms] = useState([]);
-  const [roomNo, setRoomNoUseState] = useState("");
 
   const registerStudent = async (e) => {
     e.preventDefault();
@@ -18,7 +17,7 @@ function RegisterStudent() {
       let student = {
         name: name,
         cms_id: cms,
-        room_no: room_no,
+        room_no: roomNo,
         batch: batch,
         dept: dept,
         course: course,
@@ -243,7 +242,7 @@ function RegisterStudent() {
   const hostel = JSON.parse(localStorage.getItem("hostel")).name;
   const [cms, setCms] = useState("");
   const [name, setName] = useState("");
-  const [room_no, setRoomNo] = useState("");
+  const [roomNo, setRoomNoUseState] = useState("");
   const [batch, setBatch] = useState("");
   const [dept, setDept] = useState("");
   const [course, setCourse] = useState("");
@@ -397,7 +396,7 @@ function RegisterStudent() {
               <select
                 name="room"
                 value={roomNo || ""}
-                onChange={(e) => setRoomNo(e.target.value)}
+                onChange={(e) => setRoomNoUseState(e.target.value)}
                 required
                 className="px-4 py-2 border rounded-md shadow-sm focus:ring focus:ring-indigo-300 transition-all bg-white text-gray-700 border-gray-300"
               >
