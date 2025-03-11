@@ -10,6 +10,82 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
+
+
+
+
+exports.handleInvoiceRequest = async (req, res) => {
+    try {
+        const { success, canceled, session_id } = req.query;
+
+        if (success === "true" && session_id) {
+            // Fetch the session details from Stripe
+            const session = await stripe.checkout.sessions.retrieve(session_id);
+            if (!session) {
+                return res.status(400).json({ success: false, message: "Invalid session ID" });
+            }
+
+            const studentId = session.metadata.studentId;
+            const paymentId = session.metadata.paymentId;
+            const amount = session.amount_total / 100; // Convert cents to rupees
+
+            // Check if payment exists
+            const payment = await Payments.findById(paymentId);
+            if (!payment) {
+                return res.status(404).json({ success: false, message: "Payment not found" });
+            }
+
+            // Update Payment Status
+            payment.paymentStatus = "Completed";
+            await payment.save();
+
+            // Create an Invoice Entry
+            const invoice = new Invoice({
+                student: studentId,
+                payment: paymentId,
+                amountPaid: amount,
+                paymentType: session.payment_method_types[0], // Example: "card" or "upi"
+                status: "paid",
+                invoiceDate: new Date(),
+                stripeSessionId: session_id,
+            });
+
+            await invoice.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Payment successful. Invoice generated.",
+                invoice,
+            });
+        }
+
+        if (canceled === "true") {
+            return res.status(200).json({
+                success: false,
+                message: "Payment canceled by the user.",
+            });
+        }
+
+        return res.status(400).json({
+            success: false,
+            message: "Invalid request parameters.",
+        });
+
+    } catch (error) {
+        console.error("❌ Error in invoice handling:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
+    }
+};
+
+
+
+
+
+
+
 exports.confirmPayment = async (req, res) => {
     const { session_id } = req.query;
     if (!session_id) {
@@ -311,14 +387,108 @@ exports.pdfInvoice = async (req, res) => {
         doc.text(`Address: ${student.address}`);
         doc.text(`Date of Birth: ${student.dob}`).moveDown(2);
 
-        // Invoice Details
-        doc.fontSize(16).text(`Invoice Details:`, { underline: true }).moveDown();
-        invoices.forEach((invoice, index) => {
-            doc.fontSize(14).text(`${index + 1}. ${invoice.title}`);
-            doc.text(`Date: ${new Date(invoice.date).toDateString()}`);
-            doc.text(`Amount: ₹${invoice.amount}`);
-            doc.text(`Status: ${invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}`).moveDown();
+        // Replace the existing invoice details section with this enhanced version
+
+        // Invoice Details Table
+        // doc.fontSize(16).text(`Invoice Details:`, {
+        //     underline: true,
+        //     color: student.theme_color || '#2c3e50' // Use theme color or default
+        // }).moveDown(0.5);
+
+        // Table setup
+        const tableTop = doc.y + 10;
+        const tableLeft = 50;
+        const columnWidths = [200, 120, 120, 120]; // Increased widths for better spacing
+        const rowHeight = 35;
+        const headerColor = student.theme_color || '#2c3e50';
+
+        // // Add college logo (replace with your actual logo path)
+        // doc.image(path.join(__dirname, '../'), 50, doc.y - 20, {
+        //     width: 100
+        // }).moveDown(2);
+
+        // Table Header
+        doc.rect(tableLeft, tableTop, columnWidths.reduce((a, b) => a + b, 0), rowHeight)
+            .fill(headerColor)
+            .stroke(headerColor);
+
+        doc.fontSize(12).font('Helvetica-Bold').fillColor('white');
+        doc.text('TITLE', tableLeft + 10, tableTop + 10);
+        doc.text('DATE', tableLeft + columnWidths[0] + 10, tableTop + 10);
+        doc.text('AMOUNT', tableLeft + columnWidths[0] + columnWidths[1] + 10, tableTop + 10, {
+            align: 'right'
         });
+        // doc.text('STATUS', tableLeft + columnWidths[0] + columnWidths[1] + columnWidths[2] + 10, tableTop + 10);
+
+        // Draw rows
+        doc.font('Helvetica').fontSize(12).fillColor('#2c3e50');
+        let y = tableTop + rowHeight;
+
+        // Add alternating row colors
+        const rowColors = ['#f8f9fa', 'white'];
+        let colorIndex = 0;
+
+        invoices.forEach((invoice, index) => {
+            // Alternate row background
+            doc.rect(tableLeft, y, columnWidths.reduce((a, b) => a + b, 0), rowHeight)
+                .fill(rowColors[colorIndex % 2])
+                .stroke(rowColors[colorIndex % 2]);
+
+            // Format amount with commas
+            const formattedAmount = `₹${parseInt(invoice.amount).toLocaleString('en-IN')}`;
+
+            // Status styling
+            const statusColor = invoice.status.toLowerCase() === 'paid' ? '#28a745' : '#fd7e14';
+
+            // Row content
+            doc.fillColor('#2c3e50').text(invoice.title, tableLeft + 10, y + 10, {
+                width: columnWidths[0] - 20
+            });
+
+            // Format date as DD/MM/YYYY
+            const formattedDate = new Date(invoice.date).toLocaleDateString('en-GB');
+            doc.text(formattedDate, tableLeft + columnWidths[0] + 10, y + 10);
+
+            doc.text(formattedAmount, tableLeft + columnWidths[0] + columnWidths[1] + 10, y + 10, {
+                width: columnWidths[2],
+                align: 'right'
+            });
+
+            // Status badge
+            // doc.fillColor(statusColor).text(
+            //     invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1),
+            //     tableLeft + columnWidths[0] + columnWidths[1] + columnWidths[2] + 10,
+            //     y + 10,
+            //     { width: columnWidths[3] - 20 }
+            // );
+
+            y += rowHeight;
+            colorIndex++;
+        });
+
+        // Add total row
+        doc.rect(tableLeft, y, columnWidths.reduce((a, b) => a + b, 0), rowHeight)
+            .fill('#e9ecef')
+            .stroke('#e9ecef');
+
+        const totalAmount = invoices.reduce((sum, invoice) => sum + parseInt(invoice.amount), 0);
+        doc.font('Helvetica-Bold').fillColor('#2c3e50')
+            .text('TOTAL', tableLeft + 10, y + 10)
+            .text(`₹${totalAmount.toLocaleString('en-IN')}`,
+                tableLeft + columnWidths[0] + columnWidths[1] + 10,
+                y + 10,
+                { width: columnWidths[2], align: 'right' }
+            );
+
+        // Add footer
+        // doc.fontSize(10).fillColor('#6c757d')
+        //     .text('For any queries, contact support@narayanchandratrust.org | Phone: +91 9292929292',
+        //         50,
+        //         doc.page.height - 50,
+        //         { align: 'center' }
+        //     );
+
+        // doc.moveDown(2);
 
         // Finalize and close PDF document
         doc.end();

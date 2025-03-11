@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-
+import { Link } from "react-router-dom";
 
 
 function Payments() {
   const [paymentList, setPaymentList] = useState([]);
   const [showPending, setShowPending] = useState(true); // Toggle between pending & completed
+  const [selectedPlan, setSelectedPlan] = useState("monthly");
+
+  const invoiceAmount = 8400;
   // const [totalPayments, setTotalPayments] = useState([]);
   // const [completedPayments, setCompletedPayments] = useState([]);
   // const [pendingPayments, setPendingPayments] = useState([]);
@@ -68,28 +71,30 @@ function Payments() {
       .catch((error) => console.error("❌ Error fetching payments:", error));
   }, []);
 
+
+
   const handlePayment = async (payment) => {
-    let student = JSON.parse(localStorage.getItem("student")) || {};
-    if (!payment || !payment.amount) {
-      alert("Invalid payment data. Please try again.");
-      return;
-    }
+    const student = JSON.parse(localStorage.getItem("student")) || {};
     try {
       const response = await fetch("http://localhost:3000/api/payments/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId: student._id, amount: payment.amount, payment: payment._id }),
+        body: JSON.stringify({
+          studentId: student._id,
+          paymentType: selectedPlan
+        }),
       });
+
       const data = await response.json();
       if (data.success) {
-        window.location.href = data.sessionUrl;  // Redirect to Stripe
-      } else {
-        alert("Payment failed. Please try again.");
+        window.location.href = data.sessionUrl;
       }
     } catch (error) {
-      alert("Something went wrong.");
+      alert("Payment initiation failed");
     }
   };
+
+
 
   return (
     <div className="w-full h-screen flex flex-col gap-5 items-center justify-center max-h-screen overflow-y-auto">
@@ -97,15 +102,72 @@ function Payments() {
       <p className="text-white text-xl text-center px-5 sm:p-0">
         View and manage your hostel payments.
       </p>
-
-      <button
+      {/* <button
         className="bg-gray-800 text-white px-4 py-2 rounded mt-4"
         onClick={() => setShowPending(!showPending)}
       >
         Show {showPending ? "Completed" : "Pending"} Payments
-      </button>
+      </button> */}
 
-      <div className="w-full max-w-md p-4 border rounded-lg shadow sm:p-8 bg-neutral-950 border-neutral-900 drop-shadow-xl overflow-y-auto max-h-70">
+      {/* <div className="flex gap-4 mb-4">
+        <p className="text-white text-xl text-center px-5 sm:p-0">
+          First Select the Payment Type.
+        </p>
+        <button
+          className={`px-4 py-2 rounded ${selectedPlan === "monthly" ? "bg-blue-500" : "bg-gray-700"}`}
+          onClick={() => setSelectedPlan("monthly")}
+        >
+          Monthly
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${selectedPlan === "annual" ? "bg-blue-500" : "bg-gray-700"}`}
+          onClick={() => setSelectedPlan("annual")}
+        >
+          Annual
+        </button>
+      </div> */}
+
+      <div className="w-full h-40 flex flex-col gap-5 items-center justify-center">
+        {/* Plan Selector */}
+        <div className="flex gap-4 mb-6">
+          <button
+            className={`px-6 py-3 rounded-lg ${selectedPlan === "monthly"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+              }`}
+            onClick={() => setSelectedPlan("monthly")}
+          >
+            Monthly (₹{invoiceAmount}/month)
+          </button>
+
+          <button
+            className={`px-6 py-3 rounded-lg ${selectedPlan === "annual"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 text-gray-700"
+              }`}
+            onClick={() => setSelectedPlan("annual")}
+          >
+            Annual (₹{invoiceAmount * 12}/year)
+          </button>
+        </div>
+
+        {/* Payment List */}
+        {paymentList
+          .filter(payment => payment.paymentStatus.toLowerCase() === "pending")
+          .map((payment) => (
+            <div key={payment.id} className="payment-item">
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() => handlePayment(payment)}
+              >
+                Pay Now ({selectedPlan})
+              </button>
+            </div>
+          ))}
+      </div>
+
+
+      {/* <div className="w-full max-w-md p-4 border rounded-lg shadow sm:p-8 bg-neutral-950 border-neutral-900 drop-shadow-xl overflow-y-auto max-h-70">
         <div className="flex items-center justify-between mb-4">
           <h5 className="text-xl font-bold leading-none text-white">
             {showPending ? "Pending" : "Completed"} Payments
@@ -146,7 +208,7 @@ function Payments() {
               ))}
           </ul>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

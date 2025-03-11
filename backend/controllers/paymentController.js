@@ -31,51 +31,82 @@ exports.getPaymentsByStudent = async (req, res) => {
 
 exports.createSession = async (req, res) => {
     try {
+        const { studentId, paymentType } = req.body;
 
-        const { studentId, amount, payment } = req.body;
-
-        if (!studentId || !amount) {
-            return res.status(400).json({ success: false, message: "Missing studentId or amount." });
+        // ✅ Add validation for paymentType
+        if (!["monthly", "annual"].includes(paymentType)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid payment type"
+            });
         }
 
         const student = await Student.findById(studentId);
-        if (!student) {
-            return res.status(404).json({ success: false, message: "Student not found." });
-        }
-
-        const invoice = await Invoice.findOne({ student: student._id, status: "pending" });
-        if (!invoice) {
-            return res.status(400).json({ success: false, message: "Invoice already paid or not found." });
-        }
-
-        // ✅ FIX: Don't use session.id before it's assigned
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            line_items: [
-                {
-                    price_data: {
-                        currency: "inr",
-                        product_data: { name: invoice.title },
-                        unit_amount: invoice.amount * 100, // Convert to paise
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: "payment",
-            billing_address_collection: "required",
-            shipping_address_collection: { allowed_countries: ["IN"] },
-            success_url: `http://localhost:5173/student-dashboard/invoices?success=true&session_id=SESSION_ID_PLACEHOLDER`,
-            cancel_url: "http://localhost:5173/student-dashboard/invoices?canceled=true",
+        const invoice = await Invoice.findOne({
+            student: studentId,
+            status: "pending"
         });
 
-        session.success_url = `http://localhost:5173/student-dashboard/invoices?success=true&session_id=${session.id}`;
+        // ✅ Add null checks
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: "No pending invoice found"
+            });
+        }
 
-        console.log("✅ Stripe Checkout Session Created:", session);
+        // ✅ Fix installment calculation
+        const calculateAmount = (baseAmount, type) => {
+            if (type === "annual") return baseAmount * 12 * 0.9;
+            return baseAmount;
+        };
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: [{
+                price_data: {
+                    currency: "inr",
+                    product_data: { name: `Hostel Fees - ${paymentType}` },
+                    unit_amount: invoice.amount * (paymentType === "annual" ? 12 : 1) * 100,
+                    recurring: {
+                        interval: paymentType === "annual" ? "year" : "month"
+                    },
+                },
+                quantity: 1,
+            }],
+            mode: "subscription",
+            billing_address_collection: "required",
+            shipping_address_collection: { allowed_countries: ["IN"] },
+            metadata: {
+                studentId: studentId,
+                paymentType: paymentType,
+                invoiceId: invoice._id.toString()
+            },
+            success_url: `http://localhost:5173/student-dashboard/invoices?success=true?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `http://localhost:5173/student-dashboard/invoices?canceled=true`
+        });
+
+
+        // ✅ Fix installment configuration
+        if (paymentType === "installment") {
+            sessionConfig.subscription_data = {
+                billing_cycle_anchor: Math.floor(Date.now() / 1000) + 86400, // Start tomorrow
+                collection_method: "charge_automatically",
+                installment_plan: {
+                    interval: "month",
+                    intervals: 3
+                }
+            };
+        }
+
         res.json({ success: true, sessionUrl: session.url });
 
     } catch (error) {
-        console.error("❌ Stripe session creation failed:", error.message);
-        res.status(500).json({ success: false, message: "Stripe session creation failed." });
+        console.error("Payment Error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Payment setup failed" // ✅ Show actual error
+        });
     }
 };
 
@@ -118,46 +149,61 @@ exports.handleStripeWebhook = async (req, res) => {
     res.status(200).send("Webhook received.");
 };
 
+
+
 exports.stripeWebhook = async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-
     try {
-        const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-
-        if (event.type === "checkout.session.completed") {
-            const session = event.data.object;
-            const studentEmail = session.customer_email;
-
-            // ✅ Find the Invoice & Mark as Paid
-            const student = await Student.findOne({ email: studentEmail });
-            const invoice = await Invoice.findOne({ student: student._id, status: "pending" });
-
-            if (invoice) {
-                invoice.status = "paid";
-                invoice.date = new Date();
-                await invoice.save();
-            }
-
-            // ✅ Store Payment in Payments Collection
-            const newPayment = new Payments({
-                student: student._id,
-                invoice: invoice?._id || null,
-                amount: session.amount_total / 100,
-                stripeSessionId: session.id,
-                paymentMethod: "Stripe",
-                paymentStatus: "completed",
-                date: new Date(),
-            });
-
-            await newPayment.save();
+      const sig = req.headers["stripe-signature"];
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+      let event;
+  
+      try {
+        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+      } catch (err) {
+        console.error("⚠️ Webhook signature verification failed.", err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+  
+      // Only listen to successful payment events
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+  
+        const studentId = session.metadata.studentId;
+        const paymentId = session.metadata.paymentId;
+        const amount = session.amount_total / 100; // Convert cents to rupees
+  
+        // Fetch and update payment status
+        const payment = await Payment.findById(paymentId);
+        if (!payment) {
+          console.error("Payment record not found in database");
+          return res.status(404).send("Payment not found");
         }
-
-        res.json({ received: true });
-    } catch (err) {
-        console.error("❌ Webhook Error:", err.message);
-        res.status(400).send(`Webhook Error: ${err.message}`);
+        payment.paymentStatus = "Completed";
+        await payment.save();
+  
+        // Create an invoice entry
+        const invoice = new Invoice({
+          student: studentId,
+          payment: paymentId,
+          amountPaid: amount,
+          paymentType: session.payment_method_types[0],
+          status: "Paid",
+          invoiceDate: new Date(),
+          stripeSessionId: session.id,
+        });
+  
+        await invoice.save();
+        console.log("✅ Invoice successfully created:", invoice);
+      }
+  
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error("❌ Error processing webhook:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
     }
-};
+  };
+
 
 
 exports.storePayment = async (req, res) => {

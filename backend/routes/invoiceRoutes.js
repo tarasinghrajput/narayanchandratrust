@@ -1,8 +1,10 @@
 const express = require('express')
 const router = express.Router()
+const bodyParser = require("body-parser")
 const { check } = require('express-validator')
 const { generateInvoices, getInvoicesbyid, getInvoices, updateInvoice } = require('../controllers/invoiceController')
-const { confirmPayment, pdfInvoice } = require("../controllers/invoiceController");
+const { confirmPayment, pdfInvoice, handleInvoiceRequest } = require("../controllers/invoiceController");
+const { stripeWebhook } = require("../controllers/invoiceController");
 
 // @route   GET api/invoice/student
 // @desc    Get all invoices
@@ -11,7 +13,11 @@ const { confirmPayment, pdfInvoice } = require("../controllers/invoiceController
 //     res.status(400).json({ success: false, message: "Use POST request with student ID" });
 // });
 
+
+
 router.get("/confirm-payment", confirmPayment);
+
+router.get("/invoices", handleInvoiceRequest);
 
 // router.post("/student", [
 //     check("student", "Student ID is required").not().isEmpty(),
