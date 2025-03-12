@@ -29,6 +29,7 @@ import AllStudents from "./components/Dashboards/AdminDashboard/AllStudents";
 import AdminMess from "./components/Dashboards/AdminDashboard/Maintenance";
 import RoomsStatus from "./components/RoomsStatus";
 import Reports from "./components/Dashboards/AdminDashboard/Reports"
+import CheckoutPage from "./components/Dashboards/StudentDashboard/CheckoutPage";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           <Route path="invoices" element={<Invoices/>} />
           <Route path="payments" element={<Payments />} />
           <Route path="settings" element={<Settings/>} />
+          <Route path="checkout/:studentId/:paymentAmount" element={<CheckoutPage/>} />
         </Route>
         <Route path="/admin-dashboard" element={<AdminIndex />}>
           <Route index element={<AdminHome />} />

@@ -34,7 +34,7 @@ const InvoiceSchema = new mongoose.Schema({
     title: { type: String, required: true },
     paymentMethod: { type: String, default: "Stripe" },
     amount: { type: Number, required: true },
-    status: { type: String, enum: ["pending", "paid", "approved", "declined"], default: "pending" },
+    status: { type: String, enum: ["pending", "paid", "approved", "declined"], default: "paid" },
     date: { type: Date, default: Date.now }
 });
 

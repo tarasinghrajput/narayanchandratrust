@@ -4,7 +4,73 @@ const { validationResult } = require("express-validator");
 const Invoice = require("../models/Invoice"); // ✅ Ensure you import Invoice model
 const Student = require("../models/Student"); // ✅ Ensure you import Student model
 const Payments = require("../models/Payments");
+const mongoose = require("mongoose");
 // const nodemailer = require("nodemailer");*
+
+
+
+exports.generateInvoice = async (req, res) => {
+    const { studentId, amount } = req.body;
+
+    try {
+        // Validate input
+        if (!studentId || !amount) {
+            return res.status(400).json({ success: false, message: "Missing studentId or amount" });
+        }
+
+        // Convert studentId to ObjectId
+        const studentObjectId = new mongoose.Types.ObjectId(studentId);
+
+        console.log("🔍 Checking payment record...");
+        const payment = await Payments.findOne({ student: studentObjectId });
+
+        if (!payment) {
+            console.log("❌ Payment record not found for student:", studentObjectId);
+            return res.status(400).json({ success: false, message: "Payment record not found" });
+        }
+
+        console.log("✅ Found payment record:", payment);
+
+        // Update dueAmount or mark as paid
+        let updatedPayment;
+        if (payment.dueAmount && payment.dueAmount > amount) {
+            console.log("💰 Updating dueAmount...");
+            updatedPayment = await Payments.findOneAndUpdate(
+                { student: studentObjectId },
+                { $inc: { dueAmount: -amount } },
+                { new: true }
+            );
+            console.log("✅ Updated Payment:", updatedPayment);
+        } else {
+            console.log("🏁 Marking payment as paid...");
+            updatedPayment = await Payments.findOneAndUpdate(
+                { student: studentObjectId },
+                { $set: { paymentStatus: "paid", dueAmount: 0 } },
+                { new: true }
+            );
+            console.log("✅ Payment marked as paid:", updatedPayment);
+        }
+
+        // Create and save invoice
+        const invoice = new Invoice({
+            student: studentObjectId,
+            title: `Hostel Fees - ${new Date().toLocaleString("en-us", { month: "long" })} ${new Date().getFullYear()}`,
+            amount,
+            date: new Date()
+        });
+
+        await invoice.save();
+        console.log("📜 Invoice created successfully:", invoice);
+
+        return res.status(200).json({ success: true, invoice, updatedPayment });
+    } catch (err) {
+        console.error("❌ Invoice creation error for student:", studentId, err.message);
+        return res.status(500).json({ success: false, message: "Server error while generating invoices" });
+    }
+};
+
+
+
 
 
 
@@ -153,56 +219,56 @@ exports.handleStripeWebhook = async (req, res) => {
 
 exports.stripeWebhook = async (req, res) => {
     try {
-      const sig = req.headers["stripe-signature"];
-      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
-      let event;
-  
-      try {
-        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-      } catch (err) {
-        console.error("⚠️ Webhook signature verification failed.", err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-      }
-  
-      // Only listen to successful payment events
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-  
-        const studentId = session.metadata.studentId;
-        const paymentId = session.metadata.paymentId;
-        const amount = session.amount_total / 100; // Convert cents to rupees
-  
-        // Fetch and update payment status
-        const payment = await Payment.findById(paymentId);
-        if (!payment) {
-          console.error("Payment record not found in database");
-          return res.status(404).send("Payment not found");
+        const sig = req.headers["stripe-signature"];
+        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+        let event;
+
+        try {
+            event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+        } catch (err) {
+            console.error("⚠️ Webhook signature verification failed.", err.message);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
         }
-        payment.paymentStatus = "Completed";
-        await payment.save();
-  
-        // Create an invoice entry
-        const invoice = new Invoice({
-          student: studentId,
-          payment: paymentId,
-          amountPaid: amount,
-          paymentType: session.payment_method_types[0],
-          status: "Paid",
-          invoiceDate: new Date(),
-          stripeSessionId: session.id,
-        });
-  
-        await invoice.save();
-        console.log("✅ Invoice successfully created:", invoice);
-      }
-  
-      res.status(200).json({ received: true });
+
+        // Only listen to successful payment events
+        if (event.type === "checkout.session.completed") {
+            const session = event.data.object;
+
+            const studentId = session.metadata.studentId;
+            const paymentId = session.metadata.paymentId;
+            const amount = session.amount_total / 100; // Convert cents to rupees
+
+            // Fetch and update payment status
+            const payment = await Payment.findById(paymentId);
+            if (!payment) {
+                console.error("Payment record not found in database");
+                return res.status(404).send("Payment not found");
+            }
+            payment.paymentStatus = "Completed";
+            await payment.save();
+
+            // Create an invoice entry
+            const invoice = new Invoice({
+                student: studentId,
+                payment: paymentId,
+                amountPaid: amount,
+                paymentType: session.payment_method_types[0],
+                status: "Paid",
+                invoiceDate: new Date(),
+                stripeSessionId: session.id,
+            });
+
+            await invoice.save();
+            console.log("✅ Invoice successfully created:", invoice);
+        }
+
+        res.status(200).json({ received: true });
     } catch (error) {
-      console.error("❌ Error processing webhook:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
+        console.error("❌ Error processing webhook:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
     }
-  };
+};
 
 
 

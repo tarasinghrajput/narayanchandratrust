@@ -1,57 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 
 function Payments() {
+  const navigate = useNavigate();
   const [paymentList, setPaymentList] = useState([]);
-  const [showPending, setShowPending] = useState(true); // Toggle between pending & completed
-  const [selectedPlan, setSelectedPlan] = useState("monthly");
-
-  const invoiceAmount = 8400;
-  // const [totalPayments, setTotalPayments] = useState([]);
-  // const [completedPayments, setCompletedPayments] = useState([]);
-  // const [pendingPayments, setPendingPayments] = useState([]);
-
-  // useEffect(() => {
-  //   fetch("http://localhost:3000/api/payment/student", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ studentId: student._id }),
-  //   })
-  //     .then(res => res.json())
-  //     .then(data => {
-  //       if (data.success) {
-  //         let paidCount = 0;
-  //         let pendingCount = 0;
-  //         let paymentsList = [];
-
-  //         data.payments.forEach((payment) => {
-  //           if (payment.paymentStatus.toLowerCase() === "completed") {
-  //             paidCount += 1;
-  //           } else {
-  //             pendingCount += 1;
-  //           }
-  //           paymentsList.push({
-  //             id: payment._id,
-  //             amount: `₹ ${payment.amount}`,
-  //             date: new Date(payment.date).toLocaleDateString("en-US", {
-  //               day: "numeric",
-  //               month: "long",
-  //               year: "numeric",
-  //             }),
-  //             status: payment.paymentStatus,
-  //           });
-  //         });
-
-  //         setPaymentList(paymentsList);
-  //         setTotalPayments(data.payments.length);
-  //         setCompletedPayments(paidCount);
-  //         setPendingPayments(pendingCount);
-  //       }
-  //     })
-  //     .catch((error) => console.error("❌ Error fetching payments:", error));
-  // }, []);
-
+  
   useEffect(() => {
     let student = JSON.parse(localStorage.getItem("student")) || {};
     fetch("http://localhost:3000/api/payments/student", {
@@ -63,38 +16,36 @@ function Payments() {
       .then(data => {
         if (data.success) {
           console.log("✅ Payments API Response:", data);
-          setPaymentList(data.payments);
+          // Add `enteredAmount` field to each payment to track user input
+          const updatedPayments = data.payments.map(payment => ({
+            ...payment,
+            enteredAmount: "", // Initialize with empty value
+          }));
+          setPaymentList(updatedPayments);
         } else {
           console.error("❌ Payment API Failed:", data.message);
         }
       })
-      .catch((error) => console.error("❌ Error fetching payments:", error));
+      .catch(error => console.error("❌ Error fetching payments:", error));
   }, []);
 
-
-
-  const handlePayment = async (payment) => {
+  // Function to handle the "Pay Now" button click
+  const handlePayment = (paymentId, amount) => {
+    if (!amount || amount <= 0) {
+      alert("Please enter a valid amount!");
+      return;
+    }
+    
     const student = JSON.parse(localStorage.getItem("student")) || {};
-    try {
-      const response = await fetch("http://localhost:3000/api/payments/create-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentId: student._id,
-          paymentType: selectedPlan
-        }),
-      });
+    const studentId = student._id;
 
-      const data = await response.json();
-      if (data.success) {
-        window.location.href = data.sessionUrl;
-      }
+    try {
+      console.log(`🔄 Navigating to checkout with Amount: ₹${amount}`);
+      navigate(`/student-dashboard/checkout/${studentId}/${amount}`);
     } catch (error) {
       alert("Payment initiation failed");
     }
   };
-
-
 
   return (
     <div className="w-full h-screen flex flex-col gap-5 items-center justify-center max-h-screen overflow-y-auto">
@@ -102,113 +53,89 @@ function Payments() {
       <p className="text-white text-xl text-center px-5 sm:p-0">
         View and manage your hostel payments.
       </p>
-      {/* <button
-        className="bg-gray-800 text-white px-4 py-2 rounded mt-4"
-        onClick={() => setShowPending(!showPending)}
-      >
-        Show {showPending ? "Completed" : "Pending"} Payments
-      </button> */}
 
-      {/* <div className="flex gap-4 mb-4">
-        <p className="text-white text-xl text-center px-5 sm:p-0">
-          First Select the Payment Type.
-        </p>
-        <button
-          className={`px-4 py-2 rounded ${selectedPlan === "monthly" ? "bg-blue-500" : "bg-gray-700"}`}
-          onClick={() => setSelectedPlan("monthly")}
-        >
-          Monthly
-        </button>
-        <button
-          className={`px-4 py-2 rounded ${selectedPlan === "annual" ? "bg-blue-500" : "bg-gray-700"}`}
-          onClick={() => setSelectedPlan("annual")}
-        >
-          Annual
-        </button>
-      </div> */}
+      <div className="overflow-x-auto rounded-lg border border-gray-700">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-800">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Total Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Payment Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Due Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Enter Amount
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-gray-900 divide-y divide-gray-700">
+            {paymentList.map((payment, index) => (
+              <tr key={payment._id} className="hover:bg-gray-800 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                  ₹{payment.totalAmount?.toLocaleString('en-IN')}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                    payment.paymentStatus.toLowerCase() === 'pending'
+                      ? 'bg-yellow-800 text-yellow-400'
+                      : payment.paymentStatus.toLowerCase() === 'paid'
+                        ? 'bg-green-800 text-green-400'
+                        : 'bg-red-800 text-red-400'
+                  }`}>
+                    {payment.paymentStatus}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                  ₹{payment.dueAmount?.toLocaleString('en-IN')}
+                </td>
 
-      <div className="w-full h-40 flex flex-col gap-5 items-center justify-center">
-        {/* Plan Selector */}
-        <div className="flex gap-4 mb-6">
-          <button
-            className={`px-6 py-3 rounded-lg ${selectedPlan === "monthly"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-              }`}
-            onClick={() => setSelectedPlan("monthly")}
-          >
-            Monthly (₹{invoiceAmount}/month)
-          </button>
+                {/* New Column: Enter Amount */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <input
+                    className="w-24 px-2 py-1 text-black border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={payment.enteredAmount}
+                    onChange={(e) => {
+                      const updatedPayments = [...paymentList];
+                      updatedPayments[index].enteredAmount = Number(e.target.value);
+                      setPaymentList(updatedPayments);
+                    }}
+                    min="1"
+                    max={payment.dueAmount}
+                    required
+                  />
+                </td>
 
-          <button
-            className={`px-6 py-3 rounded-lg ${selectedPlan === "annual"
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 text-gray-700"
-              }`}
-            onClick={() => setSelectedPlan("annual")}
-          >
-            Annual (₹{invoiceAmount * 12}/year)
-          </button>
-        </div>
-
-        {/* Payment List */}
-        {paymentList
-          .filter(payment => payment.paymentStatus.toLowerCase() === "pending")
-          .map((payment) => (
-            <div key={payment.id} className="payment-item">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={() => handlePayment(payment)}
-              >
-                Pay Now ({selectedPlan})
-              </button>
-            </div>
-          ))}
+                {/* Action Button */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {payment.paymentStatus.toLowerCase() === "pending" && (
+                    <button
+                      onClick={() => handlePayment(payment._id, payment.enteredAmount)}
+                      className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-wider hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150"
+                      disabled={!payment.enteredAmount || payment.enteredAmount <= 0}
+                    >
+                      Pay Now
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {paymentList.length === 0 && (
+          <div className="text-center py-6 bg-gray-900">
+            <p className="text-gray-400">No pending payments found</p>
+          </div>
+        )}
       </div>
-
-
-      {/* <div className="w-full max-w-md p-4 border rounded-lg shadow sm:p-8 bg-neutral-950 border-neutral-900 drop-shadow-xl overflow-y-auto max-h-70">
-        <div className="flex items-center justify-between mb-4">
-          <h5 className="text-xl font-bold leading-none text-white">
-            {showPending ? "Pending" : "Completed"} Payments
-          </h5>
-        </div>
-        <div className="flow-root">
-          <ul role="list" className="divide-y divide-gray-700">
-            {paymentList
-              .filter(payment => showPending ? payment.paymentStatus.toLowerCase() === "pending" : payment.paymentStatus.toLowerCase() === "completed")
-              .map((payment, index) => (
-                <li className="py-3 sm:py-4" key={payment.id || `Payment-${index}`}>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate text-white">
-                        Payment of ₹{payment.amount}
-                      </p>
-                      <p className="text-sm truncate text-gray-400">
-                        {new Date(payment.date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </div>
-                    <div className={`flex text-base font-semibold ${payment.paymentStatus.toLowerCase() === "completed" ? "text-green-500" : "text-yellow-500"}`}>
-                      {payment.paymentStatus}
-                    </div>
-                    {payment.paymentStatus.toLowerCase() === "pending" && (
-                      <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
-                        onClick={() => handlePayment(payment)}
-                      >
-                        Pay Now
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </div>
-      </div> */}
     </div>
   );
 }
